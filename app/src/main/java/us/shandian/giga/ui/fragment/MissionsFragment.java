@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
@@ -32,7 +33,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.chip.ChipGroup;
 import com.nononsenseapps.filepicker.Utils;
 
 import org.schabi.newpipe.R;
@@ -136,7 +136,7 @@ public class MissionsFragment extends Fragment {
         startDownloadFromLink = v.findViewById(R.id.start_download_from_link);
         v.findViewById(R.id.paste_download_link).setOnClickListener(view -> pasteLinkFromClipboard());
         startDownloadFromLink.setOnClickListener(view -> downloadFromLink());
-        final ChipGroup downloadFilterGroup = v.findViewById(R.id.download_filter_group);
+        final RadioGroup downloadFilterGroup = v.findViewById(R.id.download_filter_group);
         downloadFilterGroup.setOnCheckedChangeListener((group, checkedId) ->
                 applyDownloadFilter(checkedId));
 
@@ -167,25 +167,18 @@ public class MissionsFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-
-        // Bug: in api< 23 this is never called
-        // so mActivity=null
-        // so app crashes with null-pointer exception
         mContext = context;
     }
 
     /**
-     * deprecated in API level 23,
-     * but must remain to allow compatibility with api<23
+     * Deprecated in API level 23, but retained for API < 23 compatibility.
      */
     @SuppressWarnings("deprecation")
     @Override
     public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
-
         mContext = activity;
     }
-
 
     @Override
     public void onDestroy() {
@@ -305,19 +298,16 @@ public class MissionsFragment extends Fragment {
             return true;
         } else if (itemId == R.id.pause_downloads) {
             mBinder.getDownloadManager().pauseAllMissions(false);
-            mAdapter.refreshMissionItems();// update items view
-
+            mAdapter.refreshMissionItems();
             return super.onOptionsItemSelected(item);
         }
         return super.onOptionsItemSelected(item);
     }
 
     public void showClearDownloadHistoryPrompt() {
-        // ask the user whether he wants to just clear history or instead delete files on disk
         new AlertDialog.Builder(mContext)
                 .setTitle(R.string.clear_download_history)
                 .setMessage(R.string.confirm_prompt)
-                // Intentionally misusing buttons' purpose in order to achieve good order
                 .setNegativeButton(R.string.clear_download_history, (dialog, which) ->
                         mAdapter.clearFinishedDownloads(false))
                 .setNeutralButton(R.string.cancel, null)
@@ -327,7 +317,6 @@ public class MissionsFragment extends Fragment {
     }
 
     public void showDeleteDownloadedFilesConfirmationPrompt() {
-        // make sure the user confirms once more before deleting files on disk
         new AlertDialog.Builder(mContext)
                 .setTitle(R.string.delete_downloaded_files_confirm)
                 .setNegativeButton(R.string.cancel, null)
@@ -343,18 +332,14 @@ public class MissionsFragment extends Fragment {
             mList.setLayoutManager(mGridManager);
         }
 
-        // destroy all created views in the recycler
         mList.setAdapter(null);
         mAdapter.notifyDataSetChanged();
 
-        // re-attach the adapter in grid/lineal mode
         mAdapter.setLinear(mLinear);
         mList.setAdapter(mAdapter);
 
         if (mSwitch != null) {
-            mSwitch.setIcon(mLinear
-                            ? R.drawable.ic_apps
-                            : R.drawable.ic_list);
+            mSwitch.setIcon(mLinear ? R.drawable.ic_apps : R.drawable.ic_list);
             mSwitch.setTitle(mLinear ? R.string.grid : R.string.list);
             mPrefs.edit().putBoolean("linear", mLinear).apply();
         }
@@ -362,7 +347,6 @@ public class MissionsFragment extends Fragment {
 
     private void setAdapterButtons() {
         if (mClear == null || mStart == null || mPause == null) return;
-
         mAdapter.setClearButton(mClear);
         mAdapter.setMasterButtons(mStart, mPause);
     }
@@ -430,13 +414,8 @@ public class MissionsFragment extends Fragment {
     }
 
     private void requestDownloadSaveAsResult(final ActivityResult result) {
-        if (result.getResultCode() != Activity.RESULT_OK) {
-            return;
-        }
-
-        if (unsafeMissionTarget == null || result.getData() == null) {
-            return;
-        }
+        if (result.getResultCode() != Activity.RESULT_OK) return;
+        if (unsafeMissionTarget == null || result.getData() == null) return;
 
         try {
             Uri fileUri = result.getData().getData();

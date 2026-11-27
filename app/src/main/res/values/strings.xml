@@ -915,4 +915,8 @@
     <string name="api23_requirement_dialog_title">YmnTube is dropping support for Android 5</string>
     <string name="api23_requirement_dialog_message">Unfortunately YmnTube depends on a few libraries that dropped support for Android 5.0 and 5.1. The next YmnTube release will therefore only work on devices with Android 6 or higher, sadly. Read more in the blogpost.</string>
     <string name="api23_requirement_dialog_blogpost">Blogpost</string>
+
+    <!-- YmnTube splash screen -->
+    <string name="splash_version" translatable="false">Version %1$s</string>
+    <string name="splash_made_by" translatable="false">Made By YMN STUDIO</string>
 </resources>

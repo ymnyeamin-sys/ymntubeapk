@@ -253,7 +253,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
             updateProgress(h);
             mPendingDownloadsItems.add(h);
 
-            h.date.setText(formatDownloadAge(item.mission.timestamp,
+            h.date.setText(MissionFormatUtils.formatDownloadAge(item.mission.timestamp,
                     System.currentTimeMillis()));
         } else {
             h.progress.setMarquee(false);
@@ -424,7 +424,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
         final String cacheKey = uri.toString();
         final Long cachedDuration = VIDEO_DURATION_CACHE.get(cacheKey);
         if (cachedDuration != null) {
-            holder.duration.setText(formatDuration(cachedDuration));
+            holder.duration.setText(MissionFormatUtils.formatDuration(cachedDuration));
             holder.duration.setVisibility(View.VISIBLE);
             return;
         }
@@ -455,34 +455,12 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
                 MAIN_THREAD_HANDLER.post(() -> {
                     if (holder.item != null
                             && cacheKey.equals(holder.icon.getTag(R.id.item_icon))) {
-                        holder.duration.setText(formatDuration(finalDuration));
+                        holder.duration.setText(MissionFormatUtils.formatDuration(finalDuration));
                         holder.duration.setVisibility(View.VISIBLE);
                     }
                 });
             }
         });
-    }
-
-    static String formatDuration(final long milliseconds) {
-        if (milliseconds <= 0L) return "";
-        final long totalSeconds = milliseconds / 1000L;
-        final long hours = totalSeconds / 3600L;
-        final long minutes = (totalSeconds % 3600L) / 60L;
-        final long seconds = totalSeconds % 60L;
-        return hours > 0L
-                ? String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds)
-                : String.format(Locale.getDefault(), "%d:%02d", minutes, seconds);
-    }
-
-    static String formatDownloadAge(final long timestamp, final long now) {
-        final long ageMillis = Math.max(0L, now - timestamp);
-        final long ageDays = ageMillis / (24L * 60L * 60L * 1000L);
-        if (ageDays == 0L) return "Today";
-        if (ageDays == 1L) return "Yesterday";
-        if (ageDays < 7L) return ageDays + " days ago";
-        if (ageDays < 30L) return (ageDays / 7L) + "w ago";
-        if (ageDays < 365L) return (ageDays / 30L) + "mo ago";
-        return (ageDays / 365L) + "y ago";
     }
 
     private void loadVideoThumbnail(@NonNull final ViewHolderItem holder,

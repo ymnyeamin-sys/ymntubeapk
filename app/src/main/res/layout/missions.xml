@@ -1,32 +1,29 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.google.android.material.chip.ChipGroup
+    <RadioGroup
         android:id="@+id/download_filter_group"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="8dp"
         android:layout_marginTop="4dp"
-        app:singleSelection="true">
+        android:checkedButton="@id/download_filter_all"
+        android:orientation="horizontal">
 
-        <com.google.android.material.chip.Chip
+        <androidx.appcompat.widget.AppCompatRadioButton
             android:id="@+id/download_filter_all"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
             android:text="@string/all" />
 
-        <com.google.android.material.chip.Chip
+        <androidx.appcompat.widget.AppCompatRadioButton
             android:id="@+id/download_filter_videos"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/channel_tab_videos" />
-    </com.google.android.material.chip.ChipGroup>
+    </RadioGroup>
 
     <LinearLayout
         android:layout_width="match_parent"

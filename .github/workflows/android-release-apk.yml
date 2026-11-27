@@ -1,3 +1,4 @@
+# Separate optimized APK build; source tree is retained from main.
 name: Build Release APK
 
 on:

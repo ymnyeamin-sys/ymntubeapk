@@ -57,6 +57,7 @@ public class DownloadPlayerActivity extends AppCompatActivity {
         }
 
         playerView = findViewById(R.id.download_player_view);
+        findViewById(R.id.download_player_back).setOnClickListener(view -> finish());
     }
 
     @Override

@@ -5,7 +5,7 @@
     <color name="defaultIconTint">@color/black</color>
 
     <color name="ic_launcher_background">#F20B12</color>
-    <color name="ymn_splash_background">#F90302</color>
+    <color name="ymn_splash_background">#000000</color>
 
     <color name="placeholder_background">#999999</color>
     <color name="placeholder_foreground">#6C6C6C</color>

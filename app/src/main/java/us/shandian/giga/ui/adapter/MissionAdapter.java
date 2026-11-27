@@ -260,7 +260,7 @@ public class MissionAdapter extends Adapter<ViewHolder> implements Handler.Callb
             h.status.setText("100%");
             h.progress.setProgress(1.0f);
             h.size.setText(Utility.formatBytes(item.mission.length));
-            h.date.setText(formatDownloadAge(item.mission.timestamp,
+            h.date.setText(MissionFormatUtils.formatDownloadAge(item.mission.timestamp,
                     System.currentTimeMillis()));
         }
     }

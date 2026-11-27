@@ -5,8 +5,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '.github/workflows/android-release-apk.yml'
+      - feature/ymntube-logo-portrait-downloader
   workflow_dispatch:
 
 permissions:

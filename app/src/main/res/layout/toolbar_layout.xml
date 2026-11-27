@@ -10,7 +10,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/ic_launcher_background"
+        android:background="?attr/windowBackground"
         android:gravity="center_vertical"
         android:minHeight="?attr/actionBarSize"
         android:theme="@style/ToolbarTheme">
@@ -24,7 +24,7 @@
             android:contentDescription="@string/app_name"
             android:scaleType="fitCenter"
             app:tint="@null"
-            android:src="@drawable/ymntube_toolbar_logo" />
+            android:src="@drawable/ymntube_splash" />
 
         <include
             android:id="@+id/toolbar_search_container"

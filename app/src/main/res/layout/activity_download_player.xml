@@ -17,7 +17,7 @@
         android:layout_marginStart="12dp"
         android:layout_marginTop="12dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/back"
+        android:contentDescription="@string/close"
         android:elevation="8dp"
         android:padding="12dp"
         android:src="@drawable/ic_arrow_back"

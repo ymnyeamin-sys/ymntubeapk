@@ -12,4 +12,4 @@ const val NEWPIPE_VERSION_CODE = 1017
 const val NEWPIPE_VERSION_NAME = "0.29.3"
 
 const val NEWPIPE_APPLICATION_ID_OLD = "ymn.ymntube.studio"
-const val NEWPIPE_APPLICATION_ID_NEW = "ymn.ymntube.studio"
+const val NEWPIPE_APPLICATION_ID_NEW = "net.newpipe.app"

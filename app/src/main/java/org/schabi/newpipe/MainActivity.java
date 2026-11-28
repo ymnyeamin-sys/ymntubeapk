@@ -61,6 +61,7 @@ import org.schabi.newpipe.fragments.MainFragment;
 import org.schabi.newpipe.fragments.detail.VideoDetailFragment;
 import org.schabi.newpipe.fragments.list.comments.CommentRepliesFragment;
 import org.schabi.newpipe.fragments.list.search.SearchFragment;
+import org.schabi.newpipe.fragments.shorts.ShortsFragment;
 import org.schabi.newpipe.local.feed.notifications.NotificationWorker;
 import org.schabi.newpipe.local.history.StatisticsPlaylistFragment;
 import org.schabi.newpipe.player.Player;
@@ -293,8 +294,7 @@ public class MainActivity extends AppCompatActivity {
             setMainNavigationSelection(R.id.main_navigation_home);
         } else if (fragment instanceof StatisticsPlaylistFragment) {
             setMainNavigationSelection(R.id.main_navigation_history);
-        } else if (fragment instanceof SearchFragment
-                && ((SearchFragment) fragment).isShortsPage()) {
+        } else if (fragment instanceof ShortsFragment) {
             setMainNavigationSelection(R.id.main_navigation_shorts);
         }
         updateToolbarBrandLogoVisibility();

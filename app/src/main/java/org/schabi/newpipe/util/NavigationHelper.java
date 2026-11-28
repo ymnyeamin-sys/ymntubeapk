@@ -52,6 +52,7 @@ import org.schabi.newpipe.fragments.list.comments.CommentRepliesFragment;
 import org.schabi.newpipe.fragments.list.kiosk.KioskFragment;
 import org.schabi.newpipe.fragments.list.playlist.PlaylistFragment;
 import org.schabi.newpipe.fragments.list.search.SearchFragment;
+import org.schabi.newpipe.fragments.shorts.ShortsFragment;
 import org.schabi.newpipe.local.bookmark.BookmarkFragment;
 import org.schabi.newpipe.local.feed.FeedFragment;
 import org.schabi.newpipe.local.history.StatisticsPlaylistFragment;
@@ -77,6 +78,7 @@ import java.util.Optional;
 public final class NavigationHelper {
     public static final String MAIN_FRAGMENT_TAG = "main_fragment_tag";
     public static final String SEARCH_FRAGMENT_TAG = "search_fragment_tag";
+    public static final String SHORTS_FRAGMENT_TAG = "shorts_fragment_tag";
 
     private static final String TAG = NavigationHelper.class.getSimpleName();
 
@@ -389,8 +391,8 @@ public final class NavigationHelper {
     public static void openShortsFragment(final FragmentManager fragmentManager,
                                           final int serviceId) {
         defaultTransaction(fragmentManager)
-                .replace(R.id.fragment_holder, SearchFragment.getShortsInstance(serviceId))
-                .addToBackStack(SEARCH_FRAGMENT_TAG)
+                .replace(R.id.fragment_holder, new ShortsFragment())
+                .addToBackStack(SHORTS_FRAGMENT_TAG)
                 .commit();
     }
 

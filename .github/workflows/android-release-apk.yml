@@ -1,5 +1,6 @@
 # Separate optimized APK build; source tree is retained from main.
 name: Build Release APK
+run-name: Build signed YmnTube Release APK
 
 on:
   pull_request:

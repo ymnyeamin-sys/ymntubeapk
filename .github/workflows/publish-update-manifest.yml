@@ -1,0 +1,48 @@
+name: Publish YmnTube update manifest
+on:
+  release:
+    types: [published]
+permissions:
+  contents: write
+jobs:
+  publish-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Download APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "*.apk" --dir ./release
+      - name: Inspect APK and update manifest
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          APK="$(find release -name '*.apk' -print -quit)"
+          test -n "$APK"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)"
+          test -n "$AAPT"
+          BADGING="$("$AAPT" dump badging "$APK")"
+          PACKAGE="$(printf '%s\n' "$BADGING" | sed -n "s/^package: name='\([^']*\)'.*/\1/p")"
+          VERSION_NAME="$(printf '%s\n' "$BADGING" | sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p")"
+          VERSION_CODE="$(printf '%s\n' "$BADGING" | sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p")"
+          test "$PACKAGE" = "ymn.ymntube.studio"
+          test -n "$VERSION_CODE" && test -n "$VERSION_NAME"
+          SHA256="$(sha256sum "$APK" | cut -d' ' -f1)"
+          MODE=optional
+          if printf '%s' "$RELEASE_BODY" | grep -q 'YMN_MODE=force'; then MODE=force; fi
+          ASSET_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$(basename "$APK")"
+          python3 - "$PACKAGE" "$VERSION_NAME" "$VERSION_CODE" "$MODE" "$ASSET_URL" "$SHA256" "$RELEASE_BODY" <<'PY'
+          import json,sys
+          package,name,code,mode,url,sha,notes=sys.argv[1:]
+          data={"packageName":package,"versionName":name,"versionCode":int(code),"mode":mode,"downloadUrl":url,"sha256":sha,"releaseNotes":notes}
+          with open("docs/update.json","w") as f: json.dump(data,f,indent=2)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/update.json
+          git commit -m "Publish YmnTube update $VERSION_NAME"
+          git push origin HEAD:main

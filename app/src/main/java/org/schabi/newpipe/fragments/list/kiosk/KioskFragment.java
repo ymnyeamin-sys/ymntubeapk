@@ -15,9 +15,11 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.evernote.android.state.State;
 
+import org.schabi.newpipe.MainActivity;
 import org.schabi.newpipe.R;
 import org.schabi.newpipe.error.ErrorInfo;
 import org.schabi.newpipe.error.UserAction;
@@ -43,6 +45,9 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     String kioskTranslatedName;
     @State
     ContentCountry contentCountry;
+
+    private View homeChipsScroll;
+    private boolean homeChromeHidden;
 
     public static KioskFragment getInstance(final int serviceId) throws ExtractionException {
         return getInstance(serviceId, NewPipe.getService(serviceId)
@@ -81,8 +86,17 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     }
 
     @Override
+    public void onViewCreated(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        homeChipsScroll = view.findViewById(R.id.home_chips_scroll);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
+        if (useAsFrontPage) {
+            setHomeChromeHidden(false);
+        }
         if (!Localization.getPreferredContentCountry(requireContext()).equals(contentCountry)) {
             reloadContent();
         }
@@ -109,6 +123,83 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
         final ActionBar supportActionBar = activity.getSupportActionBar();
         if (supportActionBar != null && useAsFrontPage) {
             supportActionBar.setDisplayHomeAsUpEnabled(false);
+        }
+    }
+
+    @Override
+    protected void useNormalItemListScrollListener() {
+        super.useNormalItemListScrollListener();
+        attachHomeChromeScrollListener();
+    }
+
+    @Override
+    protected void useInitialItemListLoadScrollListener() {
+        super.useInitialItemListLoadScrollListener();
+        attachHomeChromeScrollListener();
+    }
+
+    private void attachHomeChromeScrollListener() {
+        if (!useAsFrontPage || itemsList == null) {
+            return;
+        }
+        itemsList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull final RecyclerView recyclerView,
+                                   final int dx, final int dy) {
+                if (dy > 4) {
+                    setHomeChromeHidden(true);
+                } else if (dy < -4) {
+                    setHomeChromeHidden(false);
+                }
+            }
+        });
+    }
+
+    private void setHomeChromeHidden(final boolean hidden) {
+        if (!useAsFrontPage) {
+            return;
+        }
+        if (homeChromeHidden == hidden) {
+            return;
+        }
+        homeChromeHidden = hidden;
+        if (activity instanceof MainActivity) {
+            ((MainActivity) activity).setHomeChromeHidden(hidden);
+        }
+        if (homeChipsScroll == null) {
+            return;
+        }
+
+        // Keep the category strip in sync with the activity-level Home navigation chrome.
+        homeChipsScroll.animate().cancel();
+        if (hidden) {
+            if (homeChipsScroll.getVisibility() != View.VISIBLE) {
+                return;
+            }
+            final int height = homeChipsScroll.getHeight();
+            homeChipsScroll.animate()
+                    .translationY(-height)
+                    .alpha(0f)
+                    .setDuration(160)
+                    .withEndAction(() -> {
+                        homeChipsScroll.setVisibility(View.GONE);
+                        homeChipsScroll.setTranslationY(0);
+                        homeChipsScroll.setAlpha(1f);
+                    })
+                    .start();
+        } else {
+            if (homeChipsScroll.getVisibility() == View.VISIBLE) {
+                homeChipsScroll.animate().translationY(0).alpha(1f)
+                        .setDuration(160).start();
+            } else {
+                homeChipsScroll.setVisibility(View.VISIBLE);
+                homeChipsScroll.setAlpha(0f);
+                homeChipsScroll.post(() -> {
+                    homeChipsScroll.setTranslationY(-homeChipsScroll.getHeight());
+                    homeChipsScroll.animate().translationY(0).alpha(1f)
+                            .setDuration(160).start();
+                });
+            }
         }
     }
 

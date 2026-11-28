@@ -37,6 +37,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
@@ -112,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor sharedPrefEditor;
     private boolean changingMainNavigation;
+    private boolean homeChromeHidden;
     /*//////////////////////////////////////////////////////////////////////////
     // Activity's LifeCycle
     //////////////////////////////////////////////////////////////////////////*/
@@ -134,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
         mainBinding = ActivityMainBinding.inflate(getLayoutInflater());
         toolbarLayoutBinding = mainBinding.toolbarLayout;
         setContentView(mainBinding.getRoot());
+        YmnUpdateManager.check(this);
         initializeWebViewAfterFirstDraw();
         miniPlayerController = new MiniPlayerController(
                 this,
@@ -322,6 +325,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateMainNavigationSelection() {
+        setHomeChromeHidden(false);
         final Fragment fragment = getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_holder);
         if (fragment instanceof MainFragment) {
@@ -348,6 +352,49 @@ public class MainActivity extends AppCompatActivity {
         changingMainNavigation = true;
         mainBinding.mainBottomNavigation.setSelectedItemId(itemId);
         changingMainNavigation = false;
+    }
+
+
+    /**
+     * Hides or restores the Home feed chrome while the user scrolls.
+     * The content area expands into the space released by the toolbar and bottom navigation.
+     */
+    public void setHomeChromeHidden(final boolean hidden) {
+        if (mainBinding == null || toolbarLayoutBinding == null
+                || homeChromeHidden == hidden) {
+            return;
+        }
+
+        homeChromeHidden = hidden;
+        final View toolbar = toolbarLayoutBinding.getRoot();
+        final View bottomNavigation = mainBinding.mainBottomNavigation;
+        final View fragmentHolder = mainBinding.fragmentHolder;
+
+        final int toolbarHeight = toolbar.getHeight() > 0
+                ? toolbar.getHeight() : dpToPx(48);
+        final int bottomNavigationHeight = bottomNavigation.getHeight() > 0
+                ? bottomNavigation.getHeight() : dpToPx(56);
+
+        final ViewGroup.MarginLayoutParams contentParams =
+                (ViewGroup.MarginLayoutParams) fragmentHolder.getLayoutParams();
+        contentParams.topMargin = hidden ? 0 : dpToPx(48);
+        contentParams.bottomMargin = hidden ? 0 : dpToPx(56);
+        fragmentHolder.setLayoutParams(contentParams);
+
+        toolbar.animate().cancel();
+        bottomNavigation.animate().cancel();
+        toolbar.animate()
+                .translationY(hidden ? -toolbarHeight : 0)
+                .setDuration(180)
+                .start();
+        bottomNavigation.animate()
+                .translationY(hidden ? bottomNavigationHeight : 0)
+                .setDuration(180)
+                .start();
+    }
+
+    private int dpToPx(final int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
     private void openFullPlayer() {

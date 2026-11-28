@@ -96,6 +96,7 @@ $("publish").onclick=async()=>{
  if(!file.name.toLowerCase().endsWith(".apk")){msg.className="error";msg.textContent="Please select an APK file.";return}
  if(!notes){msg.className="error";msg.textContent="Please add release notes so users can see what's changed.";return}
  if(file.size>65*1024*1024){msg.className="error";msg.textContent="APK is too large for this browser uploader (safe limit 65 MB).";return}
+ const headers={Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
  btn.disabled=true;msg.className="";msg.textContent="Preparing APK for secure GitHub upload…";
  try{
   const tag="upload-"+Date.now();

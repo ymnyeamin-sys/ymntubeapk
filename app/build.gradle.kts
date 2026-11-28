@@ -40,7 +40,7 @@ configure<ApplicationExtension> {
     namespace = NEWPIPE_APPLICATION_ID_OLD
 
     defaultConfig {
-        applicationId = NEWPIPE_APPLICATION_ID_OLD
+        applicationId = "ymn.ymntube.studio"
         resValue("string", "app_name", "YmnTube")
         minSdk {
             version = release(NEWPIPE_VERSION_SDK_MIN)

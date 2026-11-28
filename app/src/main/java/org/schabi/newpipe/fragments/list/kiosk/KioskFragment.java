@@ -206,7 +206,6 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
             kioskTranslatedName = KioskTranslator.getTranslatedKioskName(id, requireContext());
             name = kioskTranslatedName;
             contentCountry = Localization.getPreferredContentCountry(requireContext());
-            homeChromeHidden = false;
             setHomeChromeHidden(false);
             reloadContent();
         } catch (final Exception e) {

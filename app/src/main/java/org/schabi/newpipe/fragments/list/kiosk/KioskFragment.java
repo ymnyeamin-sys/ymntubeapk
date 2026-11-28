@@ -159,6 +159,9 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
         if (!useAsFrontPage) {
             return;
         }
+        if (homeChromeHidden == hidden) {
+            return;
+        }
         homeChromeHidden = hidden;
         if (activity instanceof MainActivity) {
             ((MainActivity) activity).setHomeChromeHidden(hidden);
@@ -189,10 +192,12 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
                         .setDuration(160).start();
             } else {
                 homeChipsScroll.setVisibility(View.VISIBLE);
-                homeChipsScroll.setTranslationY(-homeChipsScroll.getHeight());
                 homeChipsScroll.setAlpha(0f);
-                homeChipsScroll.animate().translationY(0).alpha(1f)
-                        .setDuration(160).start();
+                homeChipsScroll.post(() -> {
+                    homeChipsScroll.setTranslationY(-homeChipsScroll.getHeight());
+                    homeChipsScroll.animate().translationY(0).alpha(1f)
+                            .setDuration(160).start();
+                });
             }
         }
     }

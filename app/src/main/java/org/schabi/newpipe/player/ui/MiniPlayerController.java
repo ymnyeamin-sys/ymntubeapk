@@ -45,6 +45,10 @@ public final class MiniPlayerController implements DefaultLifecycleObserver {
             new BottomSheetBehavior.BottomSheetCallback() {
                 @Override
                 public void onStateChanged(@NonNull final View bottomSheet, final int newState) {
+                    // Keep the full player immersive: the app's bottom navigation belongs
+                    // to the Home screen and must not cover the player controls.
+                    navigation.setVisibility(newState == BottomSheetBehavior.STATE_EXPANDED
+                            ? View.GONE : View.VISIBLE);
                     // Hiding the sheet triggers VideoDetailFragment cleanup and stops playback.
                     updateVisibility();
                 }
@@ -152,6 +156,7 @@ public final class MiniPlayerController implements DefaultLifecycleObserver {
     @Override
     public void onDestroy(@NonNull final LifecycleOwner owner) {
         onStop(owner);
+        navigation.setVisibility(View.VISIBLE);
         MiniPlayerDismissal.removeListener(dismissalStateChangeListener);
         if (bottomSheetBehavior != null && bottomSheetCallbackRegistered) {
             bottomSheetBehavior.removeBottomSheetCallback(bottomSheetCallback);

@@ -85,6 +85,11 @@ class SplashActivity : AppCompatActivity() {
 
         startActivity(
             Intent(this, MainActivity::class.java).apply {
+                // Keep the launcher action/categories so that MainActivity can still tell that it
+                // was started from the launcher (e.g. to open the downloads when offline)
+                action = intent.action
+                intent.categories?.forEach { addCategory(it) }
+                data = intent.data
                 intent.extras?.let { putExtras(it) }
             }
         )

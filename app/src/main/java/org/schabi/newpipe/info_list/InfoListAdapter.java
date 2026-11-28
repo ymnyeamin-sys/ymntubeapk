@@ -29,6 +29,7 @@ import org.schabi.newpipe.info_list.holder.PlaylistInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.PlaylistMiniInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamCardInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamGridInfoItemHolder;
+import org.schabi.newpipe.info_list.holder.StreamHomeInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamMiniInfoItemHolder;
 import org.schabi.newpipe.local.history.HistoryRecordManager;
@@ -304,8 +305,11 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             case STREAM_HOLDER_TYPE:
                 return new StreamInfoItemHolder(infoItemBuilder, parent);
             case GRID_STREAM_HOLDER_TYPE:
-                return new StreamGridInfoItemHolder(infoItemBuilder, parent,
-                        useFullWidthGridThumbnails);
+                if (useFullWidthGridThumbnails) {
+                    // The home page uses the YouTube-like video card
+                    return new StreamHomeInfoItemHolder(infoItemBuilder, parent);
+                }
+                return new StreamGridInfoItemHolder(infoItemBuilder, parent);
             case CARD_STREAM_HOLDER_TYPE:
                 return new StreamCardInfoItemHolder(infoItemBuilder, parent);
             case MINI_CHANNEL_HOLDER_TYPE:

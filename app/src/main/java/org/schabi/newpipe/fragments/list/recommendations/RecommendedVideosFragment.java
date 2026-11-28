@@ -11,6 +11,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
@@ -45,12 +51,19 @@ import io.reactivex.rxjava3.core.Single;
 public class RecommendedVideosFragment extends BaseListInfoFragment<InfoItem, SearchInfo> {
     private static final String TAG = RecommendedVideosFragment.class.getSimpleName();
     private static final int MAX_HISTORY_ITEMS_TO_ANALYZE = 10;
+    private static final String[] HOME_CATEGORIES = {
+            "For you", "All", "Music", "Gaming", "News", "Education",
+            "Sports", "Technology", "Comedy"
+    };
 
     @Nullable
     private View.OnLayoutChangeListener recommendationLayoutChangeListener;
 
     @State
     String searchQuery;
+
+    @State
+    String selectedCategory = "For you";
 
     public RecommendedVideosFragment() {
         super(UserAction.SEARCHED);
@@ -104,13 +117,81 @@ public class RecommendedVideosFragment extends BaseListInfoFragment<InfoItem, Se
     }
 
     @Override
-    protected Single<SearchInfo> loadResult(final boolean forceLoad) {
-        return getRecommendationQuery()
-                .flatMap(query -> {
-                    searchQuery = query;
-                    setInitialData(serviceId, query, getString(R.string.tab_for_you));
-                    return ExtractorHelper.searchFor(serviceId, query, List.of(), "");
+    protected Supplier<View> getListHeaderSupplier() {
+        return () -> {
+            final float density = getResources().getDisplayMetrics().density;
+            final HorizontalScrollView scroll = new HorizontalScrollView(requireContext());
+            scroll.setHorizontalScrollBarEnabled(false);
+            scroll.setClipToPadding(false);
+            scroll.setPadding(0, Math.round(8 * density), 0, Math.round(8 * density));
+
+            final LinearLayout row = new LinearLayout(requireContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setPadding(Math.round(12 * density), 0, Math.round(12 * density), 0);
+            final int accent = resolveThemeColor(androidx.appcompat.R.attr.colorAccent,
+                    Color.rgb(45, 125, 210));
+            final int textColor = resolveThemeColor(android.R.attr.textColorPrimary, Color.BLACK);
+
+            for (final String category : HOME_CATEGORIES) {
+                final TextView chip = new TextView(requireContext());
+                chip.setText(category);
+                chip.setTextSize(14);
+                chip.setSingleLine(true);
+                chip.setGravity(android.view.Gravity.CENTER);
+                chip.setPadding(Math.round(16 * density), Math.round(9 * density),
+                        Math.round(16 * density), Math.round(9 * density));
+                final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                params.setMarginEnd(Math.round(8 * density));
+                row.addView(chip, params);
+                styleCategoryChip(chip, category.equals(selectedCategory), accent, textColor);
+                chip.setOnClickListener(view -> {
+                    if (!category.equals(selectedCategory)) {
+                        selectedCategory = category;
+                        for (int i = 0; i < row.getChildCount(); i++) {
+                            final TextView item = (TextView) row.getChildAt(i);
+                            styleCategoryChip(item, HOME_CATEGORIES[i].equals(selectedCategory),
+                                    accent, textColor);
+                        }
+                        reloadContent();
+                    }
                 });
+            }
+            scroll.addView(row, new HorizontalScrollView.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            return scroll;
+        };
+    }
+
+    private int resolveThemeColor(final int attribute, final int fallback) {
+        final android.util.TypedValue value = new android.util.TypedValue();
+        return requireContext().getTheme().resolveAttribute(attribute, value, true)
+                ? value.data : fallback;
+    }
+
+    private void styleCategoryChip(final TextView chip, final boolean selected,
+                                   final int accent, final int textColor) {
+        final GradientDrawable background = new GradientDrawable();
+        background.setCornerRadius(24 * getResources().getDisplayMetrics().density);
+        background.setColor(selected ? accent
+                : resolveThemeColor(androidx.appcompat.R.attr.colorBackgroundFloating,
+                        0xFFE8E8E8));
+        chip.setBackground(background);
+        chip.setTextColor(selected ? Color.WHITE : textColor);
+        chip.setElevation(0);
+    }
+
+    @Override
+    protected Single<SearchInfo> loadResult(final boolean forceLoad) {
+        final Single<String> query = "For you".equals(selectedCategory)
+                ? getRecommendationQuery()
+                : Single.just("All".equals(selectedCategory)
+                        ? getString(R.string.trending) : selectedCategory);
+        return query.flatMap(selectedQuery -> {
+            searchQuery = selectedQuery;
+            setInitialData(serviceId, selectedQuery, getString(R.string.tab_for_you));
+            return ExtractorHelper.searchFor(serviceId, selectedQuery, List.of(), "");
+        });
     }
 
     @Override

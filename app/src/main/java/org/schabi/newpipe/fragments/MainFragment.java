@@ -18,6 +18,7 @@ import org.schabi.newpipe.databinding.FragmentMainBinding;
 import org.schabi.newpipe.error.ErrorInfo;
 import org.schabi.newpipe.error.UserAction;
 import org.schabi.newpipe.local.playlist.LocalPlaylistFragment;
+import org.schabi.newpipe.fragments.list.recommendations.RecommendedVideosFragment;
 import org.schabi.newpipe.settings.tabs.Tab;
 
 import java.util.ArrayList;
@@ -128,7 +129,8 @@ public class MainFragment extends BaseFragment {
 
             final Fragment fragment;
             try {
-                fragment = tab.getFragment(context);
+                fragment = tab.getTabId() == Tab.Type.DEFAULT_KIOSK.getTabId()
+                        ? new RecommendedVideosFragment() : tab.getFragment(context);
             } catch (final Throwable t) {
                 return new BlankFragment(new ErrorInfo(t, UserAction.GETTING_MAIN_SCREEN_TAB,
                         "Tab " + tab.getClass().getSimpleName() + ":" + tab.getTabName(context)));

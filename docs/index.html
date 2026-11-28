@@ -42,9 +42,9 @@ label{display:block;color:#c7d5e9;font-size:12px;font-weight:650;margin:14px 0 6
 </section>
 <section class="panel"><div class="panelhead"><div><h3>Release history</h3><div class="sub">Every published version with its technical details</div></div><div class="history-tools"><input id="searchHistory" placeholder="Search versions…"></div></div><div class="history" id="history"><div class="empty">Loading release history…</div></div></section>
 </div>
-<aside><section class="panel"><div class="panelhead"><div><h3>Publish a new update</h3><div class="sub">Upload your signed APK as a GitHub Release</div></div></div>
+<aside><section class="panel"><div class="panelhead"><div><h3>Publish a new update</h3><div class="sub">Queue your signed APK for automatic GitHub Release publishing</div></div></div>
 <label for="token">GitHub Personal Access Token</label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…" spellcheck="false">
-<div class="help">Fine-grained token: select this repository and grant <b>Contents: Read and write</b>. Token is saved in this browser profile for future visits. Use Lock / Logout to lock the dashboard.</div>
+<div class="help">Fine-grained token: select this repository and grant <b>Contents: Read and write</b>. Token is saved in this browser profile for future visits. Use Lock / Logout to lock the dashboard. APK upload is processed by GitHub Actions.</div>
 <label for="apk">Signed APK file</label><input id="apk" type="file" accept=".apk,application/vnd.android.package-archive">
 <div class="help" id="fileInfo">Choose the signed YmnTube APK. Version name and code are read automatically by GitHub Actions.</div>
 <label for="mode">Update policy</label><select id="mode"><option value="optional">Optional — user can skip</option><option value="force">Force — user must update</option></select>
@@ -95,26 +95,26 @@ $("publish").onclick=async()=>{
  if(!token||!file){msg.className="error";msg.textContent="GitHub token and signed APK are required.";return}
  if(!file.name.toLowerCase().endsWith(".apk")){msg.className="error";msg.textContent="Please select an APK file.";return}
  if(!notes){msg.className="error";msg.textContent="Please add release notes so users can see what's changed.";return}
- if(file.size>190*1024*1024){msg.className="error";msg.textContent="APK is too large for this browser uploader (limit 190 MB).";return}
- btn.disabled=true;msg.className="";msg.textContent="Creating a draft GitHub Release…";
- const headers={Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
- let draftUrl="";
+ if(file.size>65*1024*1024){msg.className="error";msg.textContent="APK is too large for this browser uploader (safe limit 65 MB).";return}
+ btn.disabled=true;msg.className="";msg.textContent="Preparing APK for secure GitHub upload…";
  try{
-  const tag="upload-"+new Date().toISOString().replace(/[-:.TZ]/g,"").slice(0,14);
-  const c=await fetch(API+"/releases",{method:"POST",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({tag_name:tag,name:"YmnTube update "+tag,draft:true,body:"YMN_MODE="+mode+"\n\n"+notes})});
-  if(!c.ok)throw Error("Could not create release: "+(await c.json()).message);
-  const release=await c.json();draftUrl=release.html_url;
-  msg.textContent="Uploading "+file.name+" ("+size(file.size)+")…";
-  const uploadUrl=release.upload_url.split("{")[0]+"?name="+encodeURIComponent(file.name);
-  const up=await fetch(uploadUrl,{method:"POST",headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github+json","Content-Type":"application/vnd.android.package-archive"},body:file});
-  if(!up.ok)throw Error("APK upload failed: "+(await up.text()));
-  msg.textContent="Publishing release…";
-  const pub=await fetch(API+"/releases/"+release.id,{method:"PATCH",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({draft:false})});
-  if(!pub.ok)throw Error("Release created but could not be published: "+(await pub.text()));
-  $("apk").value="";$("notes").value="";$("fileInfo").textContent="Upload completed.";
-  msg.className="good";msg.textContent="Release published successfully. GitHub Actions is now inspecting the APK and updating the app feed and history. This usually takes a short while.\n"+draftUrl;
-  setTimeout(refresh,12000);
- }catch(e){msg.className="error";msg.textContent="Publish failed: "+e.message+(draftUrl?"\nDraft release: "+draftUrl:"")}
+  const tag="upload-"+Date.now();
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  let binary="";
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk)binary+=String.fromCharCode(...bytes.subarray(i,i+chunk));
+  const payload={tag,apkName:file.name,apkBase64:btoa(binary),mode,notes};
+  const encoded=new TextEncoder().encode(JSON.stringify(payload));
+  let jsonBinary="";
+  for(let i=0;i<encoded.length;i+=chunk)jsonBinary+=String.fromCharCode(...encoded.subarray(i,i+chunk));
+  const path="pending-release/"+tag+".json";
+  msg.textContent="Sending APK to GitHub securely ("+size(file.size)+")…";
+  const response=await fetch(API+"/contents/"+path,{method:"PUT",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({message:"Queue YmnTube APK release "+tag,content:btoa(jsonBinary),branch:"main"})});
+  if(!response.ok){let detail="";try{detail=(await response.json()).message||""}catch{}throw Error("Could not queue APK: "+response.status+" "+detail)}
+  $("apk").value="";$("notes").value="";$("fileInfo").textContent="Upload queued.";
+  msg.className="good";msg.textContent="APK successfully uploaded to the repository. GitHub Actions is now creating and publishing the Release, then updating the app feed and history. You can monitor progress in GitHub Actions.\nQueue ID: "+tag;
+  setTimeout(refresh,20000);
+ }catch(e){msg.className="error";msg.textContent="Publish failed: "+e.message}
  finally{btn.disabled=false}
 };
 

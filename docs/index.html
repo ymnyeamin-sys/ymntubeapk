@@ -15,10 +15,18 @@ header{display:flex;align-items:center;justify-content:space-between;gap:20px;ma
 label{display:block;color:#c7d5e9;font-size:12px;font-weight:650;margin:14px 0 6px}input,textarea,select{width:100%;border:1px solid #344663;background:#0c1423;color:var(--text);border-radius:10px;padding:11px 12px;font:inherit;outline:none}input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #7c9cff20}input[type=file]{padding:9px;font-size:12px}textarea{resize:vertical;min-height:100px}button{border:0;border-radius:10px;padding:11px 15px;background:linear-gradient(110deg,#7898ff,#5bcbd8);color:#07101d;font-weight:800;font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:wait}.secondary{background:#1a2941;color:#d8e5f8;border:1px solid #314562}.publish{width:100%;margin-top:18px;padding:13px}.help{font-size:11px;color:var(--muted);line-height:1.55;margin-top:8px}.notice{font-size:12px;color:#a9bad2;background:#111d30;border:1px solid #2b3e5b;padding:11px 12px;border-radius:10px;margin-top:13px}.notice strong{color:#dce8ff}.notice.warn{border-color:#69502d;background:#2a2117;color:#e7c995}
 .history-tools{display:flex;gap:9px;align-items:center}.history-tools input{max-width:220px;padding:8px 10px;font-size:12px}.history{display:grid;gap:10px}.release{border:1px solid var(--line);background:#10192a;border-radius:12px;padding:14px}.release-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.release-title{font-weight:800}.release-date{font-size:11px;color:var(--muted);margin-top:3px}.release-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.tag{font-size:10px;padding:4px 7px;border-radius:6px;background:#1d2b43;color:#c1d2ed}.tag.force{background:#48202c;color:#ffb5c0}.release-actions{display:flex;gap:8px;align-items:center;margin-top:12px}.linkbtn{font-size:12px;color:var(--cyan);background:none;border:0;padding:0;cursor:pointer}.empty{padding:28px;text-align:center;border:1px dashed #33445f;border-radius:12px;color:var(--muted);font-size:13px}.error{color:#ff9daa}.good{color:#7ce3b3}#message{white-space:pre-wrap;font-size:12px;margin-top:12px;color:#9edfc0}.foot{color:#687b98;font-size:11px;text-align:center;margin-top:22px}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.shell{padding:20px 14px 40px}header{align-items:flex-start}.topright .pill{display:none}.intro h2{font-size:24px}.stats{gap:9px}.stat{padding:13px}.stat .value{font-size:21px}.panel{padding:16px}.current{align-items:flex-start;flex-direction:column}.kv{gap:8px}}
+
+#lockScreen{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 15% -10%,#1d3155 0,transparent 38%),#0b1020}
+.lockbox{width:min(100%,410px);padding:28px;background:linear-gradient(145deg,#151f33,#101827);border:1px solid #344663;border-radius:18px;box-shadow:0 24px 80px #0008}
+.lockbox .logo{margin-bottom:18px}.lockbox h2{margin:0 0 5px;font-size:23px}.lockbox p{margin:0 0 18px;color:var(--muted);font-size:13px}
+#lockError{min-height:20px;color:#ff9daa;font-size:12px;margin-top:9px}
+@media(max-width:520px){.lockbox{padding:22px}}
 </style>
 </head>
-<body><div class="shell">
-<header><div class="brand"><div class="logo">Y</div><div><h1>YmnTube Control Center</h1><p>Release management · APK updates</p></div></div><div class="topright"><span class="pill"><i class="dot"></i>Public update feed</span><span class="pill">v1 · Admin</span></div></header>
+<body>
+<div id="lockScreen"><div class="lockbox"><div class="logo">Y</div><h2>YmnTube Admin Login</h2><p>Enter your admin password to open the Update Control Center.</p><form id="unlockForm"><label for="adminPassword">Admin password</label><input id="adminPassword" type="password" autocomplete="current-password" placeholder="Enter password" required><button class="publish" type="submit">Unlock dashboard</button></form><div id="lockError" role="alert"></div></div></div>
+<div class="shell" id="adminShell" hidden>
+<header><div class="brand"><div class="logo">Y</div><div><h1>YmnTube Control Center</h1><p>Release management · APK updates</p></div></div><div class="topright"><span class="pill"><i class="dot"></i>Public update feed</span><span class="pill">v1 · Admin</span><button class="secondary" id="lockButton" type="button">Lock / Logout</button></div></header>
 <section class="intro"><h2>Update Dashboard</h2><p>Manage releases, monitor version history and publish signed APK updates.</p></section>
 <section class="stats">
 <div class="stat"><div class="label">CURRENT VERSION</div><div class="value" id="sVersion">—</div><div class="hint" id="sCode">Waiting for update feed</div></div>
@@ -36,7 +44,7 @@ label{display:block;color:#c7d5e9;font-size:12px;font-weight:650;margin:14px 0 6
 </div>
 <aside><section class="panel"><div class="panelhead"><div><h3>Publish a new update</h3><div class="sub">Upload your signed APK as a GitHub Release</div></div></div>
 <label for="token">GitHub Personal Access Token</label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…" spellcheck="false">
-<div class="help">Fine-grained token: select this repository and grant <b>Contents: Read and write</b>. Token stays in this browser tab and is cleared after successful publishing.</div>
+<div class="help">Fine-grained token: select this repository and grant <b>Contents: Read and write</b>. Token is saved in this browser profile for future visits. Use Lock / Logout to lock the dashboard.</div>
 <label for="apk">Signed APK file</label><input id="apk" type="file" accept=".apk,application/vnd.android.package-archive">
 <div class="help" id="fileInfo">Choose the signed YmnTube APK. Version name and code are read automatically by GitHub Actions.</div>
 <label for="mode">Update policy</label><select id="mode"><option value="optional">Optional — user can skip</option><option value="force">Force — user must update</option></select>
@@ -103,11 +111,21 @@ $("publish").onclick=async()=>{
   msg.textContent="Publishing release…";
   const pub=await fetch(API+"/releases/"+release.id,{method:"PATCH",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({draft:false})});
   if(!pub.ok)throw Error("Release created but could not be published: "+(await pub.text()));
-  $("token").value="";$("apk").value="";$("notes").value="";$("fileInfo").textContent="Upload completed.";
+  $("apk").value="";$("notes").value="";$("fileInfo").textContent="Upload completed.";
   msg.className="good";msg.textContent="Release published successfully. GitHub Actions is now inspecting the APK and updating the app feed and history. This usually takes a short while.\n"+draftUrl;
   setTimeout(refresh,12000);
  }catch(e){msg.className="error";msg.textContent="Publish failed: "+e.message+(draftUrl?"\nDraft release: "+draftUrl:"")}
  finally{btn.disabled=false}
 };
+
+const ADMIN_PASSWORD_HASH="0cd48f35471a793c386f9a465f6db577b2d6980c7f02c408d49a386935956f41";
+const TOKEN_STORAGE_KEY="ymntube_admin_github_token";
+function showAdmin(){ $("lockScreen").style.display="none"; $("adminShell").hidden=false; }
+function lockAdmin(){ $("adminShell").hidden=true; $("lockScreen").style.display="grid"; $("adminPassword").value=""; $("lockError").textContent=""; }
+async function sha256(value){const bytes=new TextEncoder().encode(value);const digest=await crypto.subtle.digest("SHA-256",bytes);return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+$("unlockForm").addEventListener("submit",async e=>{e.preventDefault();const pass=$("adminPassword").value;if(await sha256(pass)===ADMIN_PASSWORD_HASH){showAdmin();$("lockError").textContent="";}else{$("lockError").textContent="Incorrect password. Please try again.";$("adminPassword").focus();}});
+$("lockButton").addEventListener("click",lockAdmin);
+$("token").value=localStorage.getItem(TOKEN_STORAGE_KEY)||"";
+$("token").addEventListener("input",()=>{const value=$("token").value.trim();if(value)localStorage.setItem(TOKEN_STORAGE_KEY,value);else localStorage.removeItem(TOKEN_STORAGE_KEY);});
 refresh();
 </script></body></html>

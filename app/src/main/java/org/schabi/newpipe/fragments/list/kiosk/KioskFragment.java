@@ -30,6 +30,7 @@ import org.schabi.newpipe.extractor.linkhandler.ListLinkHandlerFactory;
 import org.schabi.newpipe.extractor.localization.ContentCountry;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.fragments.list.BaseListInfoFragment;
+import org.schabi.newpipe.info_list.ItemViewMode;
 import org.schabi.newpipe.util.ExtractorHelper;
 import org.schabi.newpipe.util.KioskTranslator;
 import org.schabi.newpipe.util.Localization;
@@ -42,10 +43,6 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     String kioskTranslatedName;
     @State
     ContentCountry contentCountry;
-
-    /*//////////////////////////////////////////////////////////////////////////
-    // Views
-    //////////////////////////////////////////////////////////////////////////*/
 
     public static KioskFragment getInstance(final int serviceId) throws ExtractionException {
         return getInstance(serviceId, NewPipe.getService(serviceId)
@@ -68,9 +65,11 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
         super(UserAction.REQUESTED_KIOSK);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-    // LifeCycle
-    //////////////////////////////////////////////////////////////////////////*/
+    @Override
+    protected ItemViewMode getItemViewMode() {
+        // Use YouTube-style full-width video cards on the Home feed only.
+        return useAsFrontPage ? ItemViewMode.CARD : super.getItemViewMode();
+    }
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -103,10 +102,6 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
         return inflater.inflate(R.layout.fragment_kiosk, container, false);
     }
 
-    /*//////////////////////////////////////////////////////////////////////////
-    // Menu
-    //////////////////////////////////////////////////////////////////////////*/
-
     @Override
     public void onCreateOptionsMenu(@NonNull final Menu menu,
                                     @NonNull final MenuInflater inflater) {
@@ -116,10 +111,6 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
             supportActionBar.setDisplayHomeAsUpEnabled(false);
         }
     }
-
-    /*//////////////////////////////////////////////////////////////////////////
-    // Load and handle
-    //////////////////////////////////////////////////////////////////////////*/
 
     @Override
     public Single<KioskInfo> loadResult(final boolean forceReload) {
@@ -131,10 +122,6 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     public Single<ListExtractor.InfoItemsPage<StreamInfoItem>> loadMoreItemsLogic() {
         return ExtractorHelper.getMoreKioskItems(serviceId, url, currentNextPage);
     }
-
-    /*//////////////////////////////////////////////////////////////////////////
-    // Contract
-    //////////////////////////////////////////////////////////////////////////*/
 
     @Override
     public void handleResult(@NonNull final KioskInfo result) {

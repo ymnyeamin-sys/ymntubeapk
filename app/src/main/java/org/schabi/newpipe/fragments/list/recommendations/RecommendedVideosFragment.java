@@ -11,6 +11,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +20,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.evernote.android.state.State;
+import com.google.android.material.chip.Chip;
 
 import org.schabi.newpipe.R;
 import org.schabi.newpipe.database.history.model.StreamHistoryEntry;
@@ -38,6 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
@@ -45,12 +49,19 @@ import io.reactivex.rxjava3.core.Single;
 public class RecommendedVideosFragment extends BaseListInfoFragment<InfoItem, SearchInfo> {
     private static final String TAG = RecommendedVideosFragment.class.getSimpleName();
     private static final int MAX_HISTORY_ITEMS_TO_ANALYZE = 10;
+    private static final String[] HOME_CATEGORIES = {
+            "For you", "All", "Music", "Gaming", "News", "Education",
+            "Sports", "Technology", "Comedy"
+    };
 
     @Nullable
     private View.OnLayoutChangeListener recommendationLayoutChangeListener;
 
     @State
     String searchQuery;
+
+    @State
+    String selectedCategory = "For you";
 
     public RecommendedVideosFragment() {
         super(UserAction.SEARCHED);
@@ -104,13 +115,62 @@ public class RecommendedVideosFragment extends BaseListInfoFragment<InfoItem, Se
     }
 
     @Override
-    protected Single<SearchInfo> loadResult(final boolean forceLoad) {
-        return getRecommendationQuery()
-                .flatMap(query -> {
-                    searchQuery = query;
-                    setInitialData(serviceId, query, getString(R.string.tab_for_you));
-                    return ExtractorHelper.searchFor(serviceId, query, List.of(), "");
+    protected Supplier<View> getListHeaderSupplier() {
+        return () -> {
+            final float density = getResources().getDisplayMetrics().density;
+            final HorizontalScrollView scrollView = new HorizontalScrollView(requireContext());
+            scrollView.setHorizontalScrollBarEnabled(false);
+            scrollView.setClipToPadding(false);
+            scrollView.setPadding(0, Math.round(8 * density), 0, Math.round(8 * density));
+
+            final LinearLayout categories = new LinearLayout(requireContext());
+            categories.setOrientation(LinearLayout.HORIZONTAL);
+            categories.setPadding(Math.round(12 * density), 0,
+                    Math.round(12 * density), 0);
+
+            final Chip[] chips = new Chip[HOME_CATEGORIES.length];
+            for (int i = 0; i < HOME_CATEGORIES.length; i++) {
+                final String category = HOME_CATEGORIES[i];
+                final Chip chip = new Chip(requireContext());
+                chips[i] = chip;
+                chip.setText(category);
+                chip.setCheckable(true);
+                chip.setClickable(true);
+                chip.setChecked(category.equals(selectedCategory));
+                final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+                params.setMarginEnd(Math.round(8 * density));
+                categories.addView(chip, params);
+                chip.setOnClickListener(clicked -> {
+                    for (final Chip candidate : chips) {
+                        candidate.setChecked(candidate == chip);
+                    }
+                    if (!category.equals(selectedCategory)) {
+                        selectedCategory = category;
+                        reloadContent();
+                    }
                 });
+            }
+
+            scrollView.addView(categories, new HorizontalScrollView.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
+            return scrollView;
+        };
+    }
+
+    @Override
+    protected Single<SearchInfo> loadResult(final boolean forceLoad) {
+        final Single<String> query = "For you".equals(selectedCategory)
+                ? getRecommendationQuery()
+                : Single.just("All".equals(selectedCategory)
+                        ? getString(R.string.trending) : selectedCategory);
+        return query.flatMap(selectedQuery -> {
+            searchQuery = selectedQuery;
+            setInitialData(serviceId, selectedQuery, getString(R.string.tab_for_you));
+            return ExtractorHelper.searchFor(serviceId, selectedQuery, List.of(), "");
+        });
     }
 
     @Override

@@ -52,7 +52,9 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     private LinearLayout homeChips;
     private boolean homeChromeHidden;
     private RecyclerView.OnScrollListener homeChromeScrollListener;
-    // Keep Home identity outside saved fragment state so Home always uses Card mode.
+    // Persist Home identity across fragment recreation so the Home feed always uses
+    // the exact same Card item layout as the Related Videos list.
+    @State
     private boolean isHomeFeed;
 
     public static KioskFragment getInstance(final int serviceId) throws ExtractionException {
@@ -101,6 +103,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     public void onViewCreated(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (isHomeFeed) {
+            applyRelatedVideosCardStyle();
             homeChipsScroll = view.findViewById(R.id.home_chips_scroll);
             homeChips = view.findViewById(R.id.home_chips);
             setupHomeChips();
@@ -111,6 +114,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     public void onResume() {
         super.onResume();
         if (isHomeFeed) {
+            applyRelatedVideosCardStyle();
             setHomeChromeHidden(false);
         }
         if (!Localization.getPreferredContentCountry(requireContext()).equals(contentCountry)) {
@@ -174,6 +178,20 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
             }
         };
         itemsList.addOnScrollListener(homeChromeScrollListener);
+    }
+
+    /**
+     * Uses the exact adapter mode and vertical layout manager used by RelatedItemsFragment
+     * when Card mode is selected. This avoids Home-specific grid/thumbnail holders.
+     */
+    private void applyRelatedVideosCardStyle() {
+        if (!isHomeFeed || itemsList == null || infoListAdapter == null) {
+            return;
+        }
+        itemsList.setLayoutManager(getListLayoutManager());
+        infoListAdapter.setFullWidthGridThumbnails(false);
+        infoListAdapter.setItemViewMode(ItemViewMode.CARD);
+        infoListAdapter.notifyDataSetChanged();
     }
 
     private void setupHomeChips() {

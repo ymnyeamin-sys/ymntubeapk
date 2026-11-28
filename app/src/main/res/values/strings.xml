@@ -919,4 +919,11 @@
     <!-- YmnTube splash screen -->
     <string name="splash_version" translatable="false">Version %1$s</string>
     <string name="splash_made_by" translatable="false">Made By YMN STUDIO</string>
+
+    <!-- Shorts feed -->
+    <string name="shorts_toggle_sound">Mute / unmute</string>
+    <string name="shorts_open_in_player">Open in player</string>
+    <string name="shorts_empty">No Shorts found</string>
+    <string name="shorts_load_failed">Could not load Shorts</string>
+    <string name="shorts_cannot_play">This Short can\'t be played</string>
 </resources>

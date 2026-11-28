@@ -55,7 +55,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     // Persist Home identity across fragment recreation so the Home feed always uses
     // the exact same Card item layout as the Related Videos list.
     @State
-    private boolean isHomeFeed;
+    public boolean isHomeFeed;
 
     public static KioskFragment getInstance(final int serviceId) throws ExtractionException {
         return getInstance(serviceId, NewPipe.getService(serviceId)

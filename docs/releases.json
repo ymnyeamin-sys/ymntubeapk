@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "packageName": "ymn.ymntube.studio",
+    "versionName": "1.0.1",
+    "versionCode": 3,
+    "mode": "force",
+    "downloadUrl": "https://github.com/ymnyeamin-sys/ymntubeapk/releases/download/v1.0.1-3-1795861108281/upload-1795861108281.apk",
+    "sha256": "08907ac67b5be6c8bc2ac362fd589c0e393949f5815aeda1dea7c1d279cb072e",
+    "releaseNotes": "YMN_MODE=force\n\nbugs",
+    "releaseTag": "v1.0.1-3-1795861108281",
+    "publishedAt": "2026-11-28T10:18:54Z",
+    "releaseUrl": "https://github.com/ymnyeamin-sys/ymntubeapk/releases/tag/v1.0.1-3-1795861108281",
+    "apkName": "upload-1795861108281.apk",
+    "apkSize": 18080718,
+    "downloadCount": 0,
+    "releaseName": "YmnTube v1.0.1 (code 3)",
+    "createdAt": "2026-11-28T10:18:36Z"
+  }
+]

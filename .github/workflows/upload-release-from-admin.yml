@@ -1,0 +1,86 @@
+name: Publish APK uploaded from admin
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pending-release/*.json'
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Publish queued APKs and update feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(pending-release/*.json)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No queued APK files; nothing to do."
+            exit 0
+          fi
+          mkdir -p "$RUNNER_TEMP/ymn-releases"
+          for payload in "${files[@]}"; do
+            echo "Processing $payload"
+            META="$RUNNER_TEMP/meta.json"
+            APK="$RUNNER_TEMP/ymn-releases/$(basename "$payload" .json).apk"
+            python3 - "$payload" "$META" "$APK" <<'PY'
+          import base64,json,sys
+          src,meta,apk=sys.argv[1:]
+          with open(src,encoding="utf-8") as f: data=json.load(f)
+          with open(apk,"wb") as f: f.write(base64.b64decode(data["apkBase64"],validate=True))
+          out={k:data[k] for k in ("tag","apkName","mode","notes")}
+          with open(meta,"w",encoding="utf-8") as f: json.dump(out,f)
+          PY
+            TAG="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["tag"])' "$META")"
+            APK_NAME="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["apkName"])' "$META")"
+            MODE="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["mode"])' "$META")"
+            NOTES="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["notes"])' "$META")"
+            AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)"
+            BADGING="$("$AAPT" dump badging "$APK")"
+            VERSION_NAME="$(printf '%s\n' "$BADGING" | sed -n "s/^package:.*versionName='\\([^']*\\)'.*/\\1/p")"
+            VERSION_CODE="$(printf '%s\n' "$BADGING" | sed -n "s/^package:.*versionCode='\\([0-9]*\\)'.*/\\1/p")"
+            PACKAGE="$(printf '%s\n' "$BADGING" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p")"
+            test "$PACKAGE" = "ymn.ymntube.studio"
+            test -n "$VERSION_NAME" && test -n "$VERSION_CODE"
+            RELEASE_TAG="v${VERSION_NAME}-${VERSION_CODE}-${TAG#upload-}"
+            BODY="YMN_MODE=${MODE}
+
+          ${NOTES}"
+            gh release create "$RELEASE_TAG" "$APK#${APK_NAME}" --repo "$GITHUB_REPOSITORY" --title "YmnTube v${VERSION_NAME} (code ${VERSION_CODE})" --notes "$BODY"
+            gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > "$RUNNER_TEMP/release.json"
+            SHA256="$(sha256sum "$APK" | cut -d' ' -f1)"
+            python3 - "$APK" "$PACKAGE" "$VERSION_NAME" "$VERSION_CODE" "$SHA256" "$BODY" "$RUNNER_TEMP/release.json" <<'PY'
+          import json,os,sys
+          apk,package,name,code,sha,body,release_path=sys.argv[1:]
+          with open(release_path,encoding="utf-8") as f: event=json.load(f)
+          asset=next((a for a in event.get("assets",[]) if a.get("name","").lower().endswith(".apk")),None)
+          if not asset: raise SystemExit("Published release has no APK asset")
+          mode="force" if "YMN_MODE=force" in body else "optional"
+          manifest={"packageName":package,"versionName":name,"versionCode":int(code),"mode":mode,
+            "downloadUrl":asset["browser_download_url"],"sha256":sha,"releaseNotes":body,
+            "releaseTag":event["tag_name"],"publishedAt":event.get("published_at"),
+            "releaseUrl":event.get("html_url"),"apkName":asset["name"],"apkSize":asset["size"],
+            "downloadCount":asset.get("download_count",0)}
+          with open("docs/update.json","w",encoding="utf-8") as f: json.dump(manifest,f,indent=2,ensure_ascii=False)
+          hp="docs/releases.json"
+          try:
+            with open(hp,encoding="utf-8") as f: history=json.load(f)
+          except (FileNotFoundError,json.JSONDecodeError): history=[]
+          history=[r for r in history if r.get("releaseTag")!=event["tag_name"]]
+          history.append({**manifest,"releaseName":event.get("name"),"createdAt":event.get("created_at")})
+          history.sort(key=lambda r:r.get("publishedAt") or "",reverse=True)
+          with open(hp,"w",encoding="utf-8") as f: json.dump(history,f,indent=2,ensure_ascii=False)
+          print(f"Published YmnTube {name} (code {code}); feed and history updated.")
+          PY
+            rm -f "$payload"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/update.json docs/releases.json pending-release/
+          git commit -m "Publish YmnTube update feed" || echo "No file changes to commit"
+          git push origin HEAD:main

@@ -1,44 +1,113 @@
 <!doctype html>
-<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YmnTube Update Publisher</title>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>YmnTube · Update Control Center</title>
 <style>
-body{margin:0;padding:24px;background:#10151d;color:#edf2f7;font:16px system-ui;display:grid;place-items:center;min-height:100vh;box-sizing:border-box}
-main{width:min(620px,100%);padding:26px;background:#1b2430;border:1px solid #344254;border-radius:18px;box-sizing:border-box}
-h1{margin:0 0 8px}p,small{color:#aebdcd;line-height:1.5}label{display:block;margin:18px 0 7px;font-weight:650}
-input,textarea,select{width:100%;padding:13px;border-radius:10px;border:1px solid #45566a;background:#111923;color:white;font:inherit;box-sizing:border-box}
-button{margin-top:22px;width:100%;padding:14px;border:0;border-radius:10px;background:#e53935;color:white;font-weight:750;font-size:16px}
-#status{white-space:pre-wrap;margin-top:16px;color:#9fe3b1}
+:root{color-scheme:dark;--bg:#0b1020;--panel:#121a2b;--panel2:#172238;--line:#263550;--muted:#93a4bd;--text:#edf4ff;--blue:#7c9cff;--cyan:#62d7df;--green:#52d69a;--red:#ff7585}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% -10%,#1d3155 0,transparent 38%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}.shell{max-width:1240px;margin:auto;padding:30px 24px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:30px}.brand{display:flex;align-items:center;gap:13px}.logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#7c9cff,#62d7df);display:grid;place-items:center;color:#07101e;font-weight:950;font-size:20px;box-shadow:0 8px 30px #5276dc44}.brand h1{font-size:19px;margin:0;letter-spacing:.2px}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}.topright{display:flex;align-items:center;gap:10px}.pill{border:1px solid var(--line);background:#111a2a;color:#b9c9e1;padding:7px 11px;border-radius:99px;font-size:12px}.dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:7px}
+.intro{margin:0 0 22px}.intro h2{font-size:28px;letter-spacing:-.8px;margin:0 0 5px}.intro p{color:var(--muted);margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}.stat,.panel{background:linear-gradient(145deg,#151f33,#101827);border:1px solid var(--line);border-radius:17px;box-shadow:0 14px 40px #0002}.stat{padding:18px}.stat .label{font-size:12px;color:var(--muted)}.stat .value{font-size:25px;font-weight:800;margin-top:5px;letter-spacing:-.5px}.stat .hint{font-size:11px;color:#8092ac;margin-top:3px}
+.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,.9fr);gap:16px;align-items:start}.panel{padding:21px;margin-bottom:16px}.panelhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.panelhead h3{font-size:16px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:3px}.current{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px;background:#0d1626;border:1px solid #273a58;border-radius:13px}.version{font-size:29px;font-weight:850;letter-spacing:-1px}.meta{color:var(--muted);font-size:12px}.status{font-size:11px;padding:5px 9px;border-radius:99px;background:#15392f;color:#74e6b4;white-space:nowrap}.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:15px}.kv div{padding:11px 12px;border-radius:10px;background:#111b2d}.kv small{display:block;color:var(--muted);font-size:11px}.kv b{display:block;margin-top:3px;font-size:13px;overflow-wrap:anywhere}
+label{display:block;color:#c7d5e9;font-size:12px;font-weight:650;margin:14px 0 6px}input,textarea,select{width:100%;border:1px solid #344663;background:#0c1423;color:var(--text);border-radius:10px;padding:11px 12px;font:inherit;outline:none}input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #7c9cff20}input[type=file]{padding:9px;font-size:12px}textarea{resize:vertical;min-height:100px}button{border:0;border-radius:10px;padding:11px 15px;background:linear-gradient(110deg,#7898ff,#5bcbd8);color:#07101d;font-weight:800;font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:wait}.secondary{background:#1a2941;color:#d8e5f8;border:1px solid #314562}.publish{width:100%;margin-top:18px;padding:13px}.help{font-size:11px;color:var(--muted);line-height:1.55;margin-top:8px}.notice{font-size:12px;color:#a9bad2;background:#111d30;border:1px solid #2b3e5b;padding:11px 12px;border-radius:10px;margin-top:13px}.notice strong{color:#dce8ff}.notice.warn{border-color:#69502d;background:#2a2117;color:#e7c995}
+.history-tools{display:flex;gap:9px;align-items:center}.history-tools input{max-width:220px;padding:8px 10px;font-size:12px}.history{display:grid;gap:10px}.release{border:1px solid var(--line);background:#10192a;border-radius:12px;padding:14px}.release-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.release-title{font-weight:800}.release-date{font-size:11px;color:var(--muted);margin-top:3px}.release-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.tag{font-size:10px;padding:4px 7px;border-radius:6px;background:#1d2b43;color:#c1d2ed}.tag.force{background:#48202c;color:#ffb5c0}.release-actions{display:flex;gap:8px;align-items:center;margin-top:12px}.linkbtn{font-size:12px;color:var(--cyan);background:none;border:0;padding:0;cursor:pointer}.empty{padding:28px;text-align:center;border:1px dashed #33445f;border-radius:12px;color:var(--muted);font-size:13px}.error{color:#ff9daa}.good{color:#7ce3b3}#message{white-space:pre-wrap;font-size:12px;margin-top:12px;color:#9edfc0}.foot{color:#687b98;font-size:11px;text-align:center;margin-top:22px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.shell{padding:20px 14px 40px}header{align-items:flex-start}.topright .pill{display:none}.intro h2{font-size:24px}.stats{gap:9px}.stat{padding:13px}.stat .value{font-size:21px}.panel{padding:16px}.current{align-items:flex-start;flex-direction:column}.kv{gap:8px}}
 </style>
-<main><h1>YmnTube Update Publisher</h1>
-<p>Upload a signed APK as a GitHub Release. GitHub Actions will inspect its version and publish the update manifest automatically.</p>
-<label>GitHub Personal Access Token</label><input id="token" type="password" autocomplete="off" placeholder="Fine-grained token">
-<small>Grant this repository Contents: Read and write. The token is used only in this page session; never share it in chat.</small>
-<label>Signed APK</label><input id="apk" type="file" accept=".apk,application/vnd.android.package-archive">
-<label>Update type</label><select id="mode"><option value="optional">Optional — users can skip</option><option value="force">Force — required update</option></select>
-<label>Release notes</label><textarea id="notes" rows="4"></textarea>
-<button id="publish">Publish update</button><div id="status" role="status"></div></main>
+</head>
+<body><div class="shell">
+<header><div class="brand"><div class="logo">Y</div><div><h1>YmnTube Control Center</h1><p>Release management · APK updates</p></div></div><div class="topright"><span class="pill"><i class="dot"></i>Public update feed</span><span class="pill">v1 · Admin</span></div></header>
+<section class="intro"><h2>Update Dashboard</h2><p>Manage releases, monitor version history and publish signed APK updates.</p></section>
+<section class="stats">
+<div class="stat"><div class="label">CURRENT VERSION</div><div class="value" id="sVersion">—</div><div class="hint" id="sCode">Waiting for update feed</div></div>
+<div class="stat"><div class="label">TOTAL RELEASES</div><div class="value" id="sTotal">0</div><div class="hint">Published update history</div></div>
+<div class="stat"><div class="label">LATEST PUBLISHED</div><div class="value" id="sDate" style="font-size:17px">—</div><div class="hint">Most recent release date</div></div>
+<div class="stat"><div class="label">UPDATE POLICY</div><div class="value" id="sMode" style="font-size:20px">—</div><div class="hint">Optional or forced update</div></div>
+</section>
+<div class="layout"><div>
+<section class="panel"><div class="panelhead"><div><h3>Live app version</h3><div class="sub">The version currently served to Android devices</div></div><button class="secondary" id="refresh">↻ Refresh</button></div>
+<div class="current"><div><div class="meta">CURRENT RELEASE</div><div class="version" id="currentVersion">Loading…</div><div class="meta" id="currentCode"></div></div><span class="status" id="currentMode">Checking…</span></div>
+<div class="kv"><div><small>Package name</small><b id="package">—</b></div><div><small>Published at</small><b id="published">—</b></div><div><small>APK file</small><b id="apkName">—</b></div><div><small>APK size</small><b id="apkSize">—</b></div><div><small>SHA-256</small><b id="sha" style="font-size:10px">—</b></div><div><small>Release tag</small><b id="tag">—</b></div></div>
+<div class="release-actions"><a id="downloadCurrent" href="#" target="_blank" rel="noopener">Download current APK ↗</a><span style="color:#61728b">·</span><a id="releaseCurrent" href="#" target="_blank" rel="noopener">GitHub release ↗</a></div>
+</section>
+<section class="panel"><div class="panelhead"><div><h3>Release history</h3><div class="sub">Every published version with its technical details</div></div><div class="history-tools"><input id="searchHistory" placeholder="Search versions…"></div></div><div class="history" id="history"><div class="empty">Loading release history…</div></div></section>
+</div>
+<aside><section class="panel"><div class="panelhead"><div><h3>Publish a new update</h3><div class="sub">Upload your signed APK as a GitHub Release</div></div></div>
+<label for="token">GitHub Personal Access Token</label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…" spellcheck="false">
+<div class="help">Fine-grained token: select this repository and grant <b>Contents: Read and write</b>. Token stays in this browser tab and is cleared after successful publishing.</div>
+<label for="apk">Signed APK file</label><input id="apk" type="file" accept=".apk,application/vnd.android.package-archive">
+<div class="help" id="fileInfo">Choose the signed YmnTube APK. Version name and code are read automatically by GitHub Actions.</div>
+<label for="mode">Update policy</label><select id="mode"><option value="optional">Optional — user can skip</option><option value="force">Force — user must update</option></select>
+<label for="notes">Release notes / Changelog</label><textarea id="notes" placeholder="What's new in this version?&#10;• Fixed video playback issue&#10;• Improved performance"></textarea>
+<button class="publish" id="publish">Publish update ↗</button><div id="message" role="status" aria-live="polite"></div>
+<div class="notice"><strong>How it works</strong><br>After publishing, GitHub Actions checks the APK signature metadata, reads its version, calculates SHA-256 and updates the Android update feed and release history automatically.</div>
+<div class="notice warn"><strong>Important:</strong> Force update shows a required-update prompt in the app. Android still asks the user to confirm installation; silent installation is not possible.</div>
+</section></aside></div>
+<div class="foot">YmnTube Update Control Center · Powered by GitHub Releases and GitHub Actions</div>
+</div>
 <script>
-const owner="ymnyeamin-sys",repo="ymntubeapk",byId=id=>document.getElementById(id);
-byId("publish").onclick=async()=>{
- const token=byId("token").value.trim(),file=byId("apk").files[0],mode=byId("mode").value,notes=byId("notes").value;
- const status=byId("status"),button=byId("publish");
- if(!token||!file){status.textContent="Token and APK are required.";return}
- button.disabled=true;
- const headers={Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
+const OWNER="ymnyeamin-sys",REPO="ymntubeapk",BASE="https://"+OWNER+".github.io/"+REPO+"/",API="https://api.github.com/repos/"+OWNER+"/"+REPO;
+const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let historyData=[];
+function date(v){if(!v)return "—";const d=new Date(v);return isNaN(d)?"—":d.toLocaleString(undefined,{year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}
+function size(n){if(!Number(n))return "—";return n>1048576?(n/1048576).toFixed(2)+" MB":(n/1024).toFixed(1)+" KB"}
+function setLink(id,url){const a=$(id);if(url){a.href=url;a.style.pointerEvents="auto";a.style.opacity="1"}else{a.href="#";a.style.pointerEvents="none";a.style.opacity=".4"}}
+async function refresh(){
+ $("history").innerHTML='<div class="empty">Loading release history…</div>';
  try{
-  const tag="upload-"+Date.now();
-  status.textContent="Creating release…";
-  const created=await fetch("https://api.github.com/repos/"+owner+"/"+repo+"/releases",{method:"POST",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({tag_name:tag,name:"YmnTube "+tag,draft:true,body:"YMN_MODE="+mode+"\n\n"+notes})});
-  if(!created.ok)throw Error(await created.text());
-  const release=await created.json(),url=release.upload_url.split("{")[0]+"?name="+encodeURIComponent(file.name);
-  status.textContent="Uploading APK…";
-  const uploaded=await fetch(url,{method:"POST",headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github+json","Content-Type":"application/vnd.android.package-archive"},body:file});
-  if(!uploaded.ok)throw Error(await uploaded.text());
-  status.textContent="Publishing release…";
-  const published=await fetch("https://api.github.com/repos/"+owner+"/"+repo+"/releases/"+release.id,{method:"PATCH",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({draft:false})});
-  if(!published.ok)throw Error(await published.text());
-  status.textContent="Published. GitHub Actions will inspect the APK and update the app manifest.";
-  byId("token").value="";byId("apk").value="";
- }catch(error){status.textContent="Publish failed: "+error.message}finally{button.disabled=false}
+  const [u,h]=await Promise.all([fetch(BASE+"update.json?t="+Date.now(),{cache:"no-store"}),fetch(BASE+"releases.json?t="+Date.now(),{cache:"no-store"})]);
+  if(!u.ok)throw Error("Could not load update.json ("+u.status+")");
+  const current=await u.json();historyData=h.ok?await h.json():[];
+  if(!Array.isArray(historyData))historyData=[];
+  $("sVersion").textContent=current.versionName||"—";$("sCode").textContent="Version Code "+(current.versionCode??"—");
+  $("sTotal").textContent=historyData.length;$("sDate").textContent=date(historyData[0]?.publishedAt||current.publishedAt);
+  $("sMode").textContent=(current.mode||"optional").toUpperCase();
+  $("currentVersion").textContent="v"+(current.versionName||"—");$("currentCode").textContent="Version Code "+(current.versionCode??"—");
+  $("currentMode").textContent=(current.mode||"optional")==="force"?"FORCE UPDATE":"OPTIONAL UPDATE";
+  $("package").textContent=current.packageName||"—";$("published").textContent=date(current.publishedAt);
+  $("apkName").textContent=current.apkName||"—";$("apkSize").textContent=size(current.apkSize);
+  $("sha").textContent=current.sha256||"—";$("tag").textContent=current.releaseTag||"—";
+  setLink("downloadCurrent",current.downloadUrl);setLink("releaseCurrent",current.releaseUrl);
+  renderHistory();
+ }catch(e){$("history").innerHTML='<div class="empty error">'+esc(e.message)+'<br>Check that GitHub Pages is enabled for main /docs.</div>';$("currentVersion").textContent="Feed unavailable"}
+}
+function renderHistory(){
+ const q=$("searchHistory").value.trim().toLowerCase();
+ const list=historyData.filter(r=>[r.versionName,r.versionCode,r.releaseTag,r.apkName,r.releaseNotes,r.mode].join(" ").toLowerCase().includes(q));
+ if(!list.length){$("history").innerHTML='<div class="empty">'+(historyData.length?"No matching releases.":"No published updates yet. Your first published APK will appear here automatically.")+'</div>';return}
+ $("history").innerHTML=list.map((r,i)=>'<article class="release"><div class="release-top"><div><div class="release-title">YmnTube '+esc(r.versionName?"v"+r.versionName:"Release")+' <span class="meta">· code '+esc(r.versionCode??"—")+'</span></div><div class="release-date">'+esc(date(r.publishedAt))+'</div></div><span class="status">'+(r.mode==="force"?"FORCE":"OPTIONAL")+'</span></div><div class="release-tags"><span class="tag">'+esc(r.releaseTag||"No tag")+'</span><span class="tag">'+esc(r.apkName||"APK")+'</span><span class="tag">'+esc(size(r.apkSize))+'</span><span class="tag">SHA-256 '+esc((r.sha256||"").slice(0,12))+'…</span></div><div class="sub" style="margin-top:10px;white-space:pre-wrap">'+esc(r.releaseNotes||"No release notes provided")+'</div><div class="release-actions">'+(r.downloadUrl?'<a href="'+esc(r.downloadUrl)+'" target="_blank" rel="noopener">Download APK ↗</a>':"")+(r.releaseUrl?' <a href="'+esc(r.releaseUrl)+'" target="_blank" rel="noopener">Release details ↗</a>':"")+' <button class="linkbtn" data-detail="'+i+'">Technical details</button></div><div id="detail-'+i+'" hidden class="kv"><div><small>Published</small><b>'+esc(date(r.publishedAt))+'</b></div><div><small>Created</small><b>'+esc(date(r.createdAt))+'</b></div><div><small>APK size</small><b>'+esc(size(r.apkSize))+'</b></div><div><small>Downloads</small><b>'+esc(r.downloadCount??0)+'</b></div><div><small>SHA-256</small><b style="font-size:10px">'+esc(r.sha256||"—")+'</b></div><div><small>Package</small><b>'+esc(r.packageName||"ymn.ymntube.studio")+'</b></div><div><small>Version Code</small><b>'+esc(r.versionCode??"—")+'</b></div><div><small>Asset name</small><b>'+esc(r.apkName||"—")+'</b></div></div></article>').join("");
+ $("history").querySelectorAll("[data-detail]").forEach(b=>b.addEventListener("click",()=>{const el=$("detail-"+b.dataset.detail);el.hidden=!el.hidden;b.textContent=el.hidden?"Technical details":"Hide details"}));
+}
+$("refresh").onclick=refresh;$("searchHistory").oninput=renderHistory;
+$("apk").onchange=()=>{const f=$("apk").files[0];$("fileInfo").textContent=f?f.name+" · "+size(f.size):"Choose the signed YmnTube APK."};
+$("publish").onclick=async()=>{
+ const token=$("token").value.trim(),file=$("apk").files[0],mode=$("mode").value,notes=$("notes").value.trim(),msg=$("message"),btn=$("publish");
+ if(!token||!file){msg.className="error";msg.textContent="GitHub token and signed APK are required.";return}
+ if(!file.name.toLowerCase().endsWith(".apk")){msg.className="error";msg.textContent="Please select an APK file.";return}
+ if(!notes){msg.className="error";msg.textContent="Please add release notes so users can see what's changed.";return}
+ if(file.size>190*1024*1024){msg.className="error";msg.textContent="APK is too large for this browser uploader (limit 190 MB).";return}
+ btn.disabled=true;msg.className="";msg.textContent="Creating a draft GitHub Release…";
+ const headers={Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
+ let draftUrl="";
+ try{
+  const tag="upload-"+new Date().toISOString().replace(/[-:.TZ]/g,"").slice(0,14);
+  const c=await fetch(API+"/releases",{method:"POST",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({tag_name:tag,name:"YmnTube update "+tag,draft:true,body:"YMN_MODE="+mode+"\n\n"+notes})});
+  if(!c.ok)throw Error("Could not create release: "+(await c.json()).message);
+  const release=await c.json();draftUrl=release.html_url;
+  msg.textContent="Uploading "+file.name+" ("+size(file.size)+")…";
+  const uploadUrl=release.upload_url.split("{")[0]+"?name="+encodeURIComponent(file.name);
+  const up=await fetch(uploadUrl,{method:"POST",headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github+json","Content-Type":"application/vnd.android.package-archive"},body:file});
+  if(!up.ok)throw Error("APK upload failed: "+(await up.text()));
+  msg.textContent="Publishing release…";
+  const pub=await fetch(API+"/releases/"+release.id,{method:"PATCH",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({draft:false})});
+  if(!pub.ok)throw Error("Release created but could not be published: "+(await pub.text()));
+  $("token").value="";$("apk").value="";$("notes").value="";$("fileInfo").textContent="Upload completed.";
+  msg.className="good";msg.textContent="Release published successfully. GitHub Actions is now inspecting the APK and updating the app feed and history. This usually takes a short while.\n"+draftUrl;
+  setTimeout(refresh,12000);
+ }catch(e){msg.className="error";msg.textContent="Publish failed: "+e.message+(draftUrl?"\nDraft release: "+draftUrl:"")}
+ finally{btn.disabled=false}
 };
-</script>
+refresh();
+</script></body></html>

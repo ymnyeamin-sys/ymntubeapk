@@ -16,10 +16,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
         run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "*.apk" --dir ./release
-      - name: Inspect APK and update manifest
+      - name: Inspect APK and update manifest and history
         env:
           RELEASE_BODY: ${{ github.event.release.body }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
+          EVENT_PATH: ${{ github.event_path }}
         run: |
           APK="$(find release -name '*.apk' -print -quit)"
           test -n "$APK"
@@ -32,17 +33,41 @@ jobs:
           test "$PACKAGE" = "ymn.ymntube.studio"
           test -n "$VERSION_CODE" && test -n "$VERSION_NAME"
           SHA256="$(sha256sum "$APK" | cut -d' ' -f1)"
-          MODE=optional
-          if printf '%s' "$RELEASE_BODY" | grep -q 'YMN_MODE=force'; then MODE=force; fi
-          ASSET_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$(basename "$APK")"
-          python3 - "$PACKAGE" "$VERSION_NAME" "$VERSION_CODE" "$MODE" "$ASSET_URL" "$SHA256" "$RELEASE_BODY" <<'PY'
-          import json,sys
-          package,name,code,mode,url,sha,notes=sys.argv[1:]
-          data={"packageName":package,"versionName":name,"versionCode":int(code),"mode":mode,"downloadUrl":url,"sha256":sha,"releaseNotes":notes}
-          with open("docs/update.json","w") as f: json.dump(data,f,indent=2)
+          python3 - "$APK" "$PACKAGE" "$VERSION_NAME" "$VERSION_CODE" "$SHA256" "$RELEASE_BODY" "$EVENT_PATH" <<'PY'
+          import json,os,sys
+          apk,package,name,code,sha,body,event_path=sys.argv[1:]
+          with open(event_path,encoding="utf-8") as f: event=json.load(f)["release"]
+          asset=next((a for a in event.get("assets",[]) if a.get("name","").lower().endswith(".apk")),None)
+          if not asset: raise SystemExit("Published release has no APK asset")
+          mode="force" if "YMN_MODE=force" in body else "optional"
+          manifest={
+            "packageName":package,"versionName":name,"versionCode":int(code),"mode":mode,
+            "downloadUrl":asset["browser_download_url"],"sha256":sha,"releaseNotes":body,
+            "releaseTag":event["tag_name"],"publishedAt":event.get("published_at"),
+            "releaseUrl":event.get("html_url"),"apkName":asset["name"],
+            "apkSize":asset["size"],"downloadCount":asset.get("download_count",0)
+          }
+          with open("docs/update.json","w",encoding="utf-8") as f: json.dump(manifest,f,indent=2,ensure_ascii=False)
+          history_path="docs/releases.json"
+          try:
+            with open(history_path,encoding="utf-8") as f: history=json.load(f)
+          except (FileNotFoundError,json.JSONDecodeError): history=[]
+          history=[r for r in history if r.get("releaseTag") != event["tag_name"]]
+          history.append({
+            "packageName":package,"versionName":name,"versionCode":int(code),"mode":mode,
+            "releaseTag":event["tag_name"],"releaseName":event.get("name"),
+            "releaseNotes":body,"releaseUrl":event.get("html_url"),
+            "downloadUrl":asset["browser_download_url"],"apkName":asset["name"],
+            "apkSize":asset["size"],"downloadCount":asset.get("download_count",0),
+            "sha256":sha,"createdAt":event.get("created_at"),
+            "publishedAt":event.get("published_at")
+          })
+          history.sort(key=lambda r:r.get("publishedAt") or "",reverse=True)
+          with open(history_path,"w",encoding="utf-8") as f: json.dump(history,f,indent=2,ensure_ascii=False)
+          print(f"Prepared {name} (code {code}) with {len(history)} release history entries")
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/update.json
+          git add docs/update.json docs/releases.json
           git commit -m "Publish YmnTube update $VERSION_NAME"
           git push origin HEAD:main

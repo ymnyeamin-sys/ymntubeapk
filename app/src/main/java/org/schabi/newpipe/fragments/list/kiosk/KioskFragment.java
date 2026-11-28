@@ -170,6 +170,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
             return;
         }
 
+        // Keep the category strip in sync with the activity-level Home navigation chrome.
         homeChipsScroll.animate().cancel();
         if (hidden) {
             if (homeChipsScroll.getVisibility() != View.VISIBLE) {

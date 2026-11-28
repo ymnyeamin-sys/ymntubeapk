@@ -11,6 +11,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,7 +49,9 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     ContentCountry contentCountry;
 
     private View homeChipsScroll;
+    private LinearLayout homeChips;
     private boolean homeChromeHidden;
+    private RecyclerView.OnScrollListener homeChromeScrollListener;
 
     public static KioskFragment getInstance(final int serviceId) throws ExtractionException {
         return getInstance(serviceId, NewPipe.getService(serviceId)
@@ -88,7 +92,11 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     @Override
     public void onViewCreated(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        homeChipsScroll = view.findViewById(R.id.home_chips_scroll);
+        if (useAsFrontPage) {
+            homeChipsScroll = view.findViewById(R.id.home_chips_scroll);
+            homeChips = view.findViewById(R.id.home_chips);
+            setupHomeChips();
+        }
     }
 
     @Override
@@ -113,7 +121,8 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     public View onCreateView(@NonNull final LayoutInflater inflater,
                              @Nullable final ViewGroup container,
                              @Nullable final Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_kiosk, container, false);
+        return inflater.inflate(useAsFrontPage ? R.layout.fragment_home
+                : R.layout.fragment_kiosk, container, false);
     }
 
     @Override
@@ -142,17 +151,71 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
         if (!useAsFrontPage || itemsList == null) {
             return;
         }
-        itemsList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        if (homeChromeScrollListener != null) {
+            itemsList.removeOnScrollListener(homeChromeScrollListener);
+        }
+        homeChromeScrollListener = new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull final RecyclerView recyclerView,
                                    final int dx, final int dy) {
                 if (dy > 4) {
                     setHomeChromeHidden(true);
-                } else if (dy < -4) {
+                } else if (dy < -4 || !recyclerView.canScrollVertically(-1)) {
                     setHomeChromeHidden(false);
                 }
             }
-        });
+        };
+        itemsList.addOnScrollListener(homeChromeScrollListener);
+    }
+
+    private void setupHomeChips() {
+        if (homeChips == null || !useAsFrontPage) {
+            return;
+        }
+        homeChips.removeAllViews();
+        try {
+            for (final String id : NewPipe.getService(serviceId).getKioskList()
+                    .getAvailableKiosks()) {
+                final TextView chip = new TextView(requireContext());
+                chip.setText(KioskTranslator.getTranslatedKioskName(id, requireContext()));
+                chip.setTextColor(requireContext().getColor(R.color.home_chip_text));
+                chip.setTextSize(14);
+                chip.setTypeface(null, android.graphics.Typeface.BOLD);
+                chip.setGravity(android.view.Gravity.CENTER);
+                chip.setSingleLine(true);
+                chip.setPadding(dp(14), 0, dp(14), 0);
+                chip.setBackgroundResource(R.drawable.home_chip_bg);
+                final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT, dp(34));
+                params.setMarginEnd(dp(8));
+                homeChips.addView(chip, params);
+                chip.setOnClickListener(v -> selectHomeKiosk(id));
+            }
+        } catch (final Exception e) {
+            showSnackBarError(new ErrorInfo(e, UserAction.UI_ERROR, "Setting up Home categories"));
+        }
+    }
+
+    private void selectHomeKiosk(final String id) {
+        try {
+            final StreamingService service = NewPipe.getService(serviceId);
+            final ListLinkHandlerFactory factory = service.getKioskList()
+                    .getListLinkHandlerFactoryByType(id);
+            kioskId = id;
+            url = factory.fromId(id).getUrl();
+            kioskTranslatedName = KioskTranslator.getTranslatedKioskName(id, requireContext());
+            name = kioskTranslatedName;
+            contentCountry = Localization.getPreferredContentCountry(requireContext());
+            homeChromeHidden = false;
+            setHomeChromeHidden(false);
+            reloadContent();
+        } catch (final Exception e) {
+            showSnackBarError(new ErrorInfo(e, UserAction.UI_ERROR, "Changing Home category"));
+        }
+    }
+
+    private int dp(final int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void setHomeChromeHidden(final boolean hidden) {

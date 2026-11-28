@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YmnTube Update Publisher</title>
+<style>
+body{margin:0;padding:24px;background:#10151d;color:#edf2f7;font:16px system-ui;display:grid;place-items:center;min-height:100vh;box-sizing:border-box}
+main{width:min(620px,100%);padding:26px;background:#1b2430;border:1px solid #344254;border-radius:18px;box-sizing:border-box}
+h1{margin:0 0 8px}p,small{color:#aebdcd;line-height:1.5}label{display:block;margin:18px 0 7px;font-weight:650}
+input,textarea,select{width:100%;padding:13px;border-radius:10px;border:1px solid #45566a;background:#111923;color:white;font:inherit;box-sizing:border-box}
+button{margin-top:22px;width:100%;padding:14px;border:0;border-radius:10px;background:#e53935;color:white;font-weight:750;font-size:16px}
+#status{white-space:pre-wrap;margin-top:16px;color:#9fe3b1}
+</style>
+<main><h1>YmnTube Update Publisher</h1>
+<p>Upload a signed APK as a GitHub Release. GitHub Actions will inspect its version and publish the update manifest automatically.</p>
+<label>GitHub Personal Access Token</label><input id="token" type="password" autocomplete="off" placeholder="Fine-grained token">
+<small>Grant this repository Contents: Read and write. The token is used only in this page session; never share it in chat.</small>
+<label>Signed APK</label><input id="apk" type="file" accept=".apk,application/vnd.android.package-archive">
+<label>Update type</label><select id="mode"><option value="optional">Optional — users can skip</option><option value="force">Force — required update</option></select>
+<label>Release notes</label><textarea id="notes" rows="4"></textarea>
+<button id="publish">Publish update</button><div id="status" role="status"></div></main>
+<script>
+const owner="ymnyeamin-sys",repo="ymntubeapk",byId=id=>document.getElementById(id);
+byId("publish").onclick=async()=>{
+ const token=byId("token").value.trim(),file=byId("apk").files[0],mode=byId("mode").value,notes=byId("notes").value;
+ const status=byId("status"),button=byId("publish");
+ if(!token||!file){status.textContent="Token and APK are required.";return}
+ button.disabled=true;
+ const headers={Authorization:"Bearer "+token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
+ try{
+  const tag="upload-"+Date.now();
+  status.textContent="Creating release…";
+  const created=await fetch("https://api.github.com/repos/"+owner+"/"+repo+"/releases",{method:"POST",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({tag_name:tag,name:"YmnTube "+tag,draft:true,body:"YMN_MODE="+mode+"\n\n"+notes})});
+  if(!created.ok)throw Error(await created.text());
+  const release=await created.json(),url=release.upload_url.split("{")[0]+"?name="+encodeURIComponent(file.name);
+  status.textContent="Uploading APK…";
+  const uploaded=await fetch(url,{method:"POST",headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github+json","Content-Type":"application/vnd.android.package-archive"},body:file});
+  if(!uploaded.ok)throw Error(await uploaded.text());
+  status.textContent="Publishing release…";
+  const published=await fetch("https://api.github.com/repos/"+owner+"/"+repo+"/releases/"+release.id,{method:"PATCH",headers:{...headers,"Content-Type":"application/json"},body:JSON.stringify({draft:false})});
+  if(!published.ok)throw Error(await published.text());
+  status.textContent="Published. GitHub Actions will inspect the APK and update the app manifest.";
+  byId("token").value="";byId("apk").value="";
+ }catch(error){status.textContent="Publish failed: "+error.message}finally{button.disabled=false}
+};
+</script>

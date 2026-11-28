@@ -136,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
         mainBinding = ActivityMainBinding.inflate(getLayoutInflater());
         toolbarLayoutBinding = mainBinding.toolbarLayout;
         setContentView(mainBinding.getRoot());
+        YmnUpdateManager.check(this);
         initializeWebViewAfterFirstDraw();
         miniPlayerController = new MiniPlayerController(
                 this,

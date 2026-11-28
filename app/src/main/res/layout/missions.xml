@@ -1,0 +1,72 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <RadioGroup
+        android:id="@+id/download_filter_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginTop="4dp"
+        android:checkedButton="@id/download_filter_all"
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/download_filter_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/all" />
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/download_filter_videos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/channel_tab_videos" />
+    </RadioGroup>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp">
+
+        <EditText
+            android:id="@+id/download_link_input"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/download_link_hint"
+            android:inputType="textUri"
+            android:maxLines="1"
+            android:singleLine="true" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/paste_download_link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:text="@string/download_paste_link" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/start_download_from_link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:text="@string/download_from_link" />
+    </LinearLayout>
+
+    <include
+        android:id="@+id/list_empty_view"
+        layout="@layout/list_empty_view"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/mission_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>

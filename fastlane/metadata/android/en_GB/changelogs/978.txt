@@ -1,0 +1,1 @@
+Fixed executing the check for a new YmnTube version. Sometimes, this check was executed too early and lead to an app crash. That should be fixed now.

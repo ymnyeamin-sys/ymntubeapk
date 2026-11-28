@@ -9,4 +9,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <ImageButton
+        android:id="@+id/download_player_back"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/close"
+        android:elevation="8dp"
+        android:padding="12dp"
+        android:src="@drawable/ic_arrow_back"
+        android:tint="@android:color/white" />
+
 </FrameLayout>

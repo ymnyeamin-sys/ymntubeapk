@@ -6,6 +6,7 @@
 package org.schabi.newpipe.download;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -57,6 +58,14 @@ public class DownloadPlayerActivity extends AppCompatActivity {
         }
 
         playerView = findViewById(R.id.download_player_view);
+        findViewById(R.id.download_player_back).setOnClickListener(view -> finish());
+    }
+
+    @Override
+    public void finish() {
+        // Restore portrait before returning to the app's main screen.
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        super.finish();
     }
 
     @Override

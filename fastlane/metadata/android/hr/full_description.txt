@@ -1,0 +1,1 @@
+YmnTube ne koristi nijednu Googleovu biblioteku niti YouTube API, već samo analizira web-stranicu kako bi pribavio potrebne podatke. Stoga se ova aplikacija može koristiti na uređajima bez instaliranih Google usluga. Također, YmnTube se može koristiti bez YouTube računa. YmnTube je slobodna aplikacija otvorenog koda.

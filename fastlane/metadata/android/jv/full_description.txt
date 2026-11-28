@@ -1,0 +1,1 @@
+YmnTube ora migunakake pustaka kerangka kerja Google, utawa API Youtube. YmnTube namung migunakake informasi situs kanggo njupuk informasi kang dibutuhake. Mula iku, YmnTube isa digunakke ing piranti tanpa Layanan Google. Sampeyan uga ora mbutuhake akun Youtube kanggo migunakake YmnTube, lan aplikasi iki FLOSS.

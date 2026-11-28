@@ -160,6 +160,8 @@ public final class VideoDetailFragment
     private static final String RELATED_TAB_TAG = "NEXT VIDEO";
     private static final String DESCRIPTION_TAB_TAG = "DESCRIPTION TAB";
     private static final String EMPTY_TAB_TAG = "EMPTY TAB";
+    private static final String PREF_RELATED_TAB_DEFAULT_MIGRATED =
+            "stream_info_related_tab_default_migrated_v104";
     private static final String STATE_FULLSCREEN_CHROME_CAPTURED =
             "video_detail.fullscreen_chrome_captured";
     private static final String STATE_FULLSCREEN_REQUESTED_ORIENTATION =
@@ -368,8 +370,17 @@ public final class VideoDetailFragment
         showComments = prefs.getBoolean(getString(R.string.show_comments_key), true);
         showRelatedItems = prefs.getBoolean(getString(R.string.show_next_video_key), true);
         showDescription = prefs.getBoolean(getString(R.string.show_description_key), true);
-        selectedTabTag = prefs.getString(
-                getString(R.string.stream_info_selected_tab_key), COMMENTS_TAB_TAG);
+        final String selectedTabPreferenceKey =
+                getString(R.string.stream_info_selected_tab_key);
+        if (!prefs.getBoolean(PREF_RELATED_TAB_DEFAULT_MIGRATED, false)) {
+            selectedTabTag = RELATED_TAB_TAG;
+            prefs.edit()
+                    .putString(selectedTabPreferenceKey, RELATED_TAB_TAG)
+                    .putBoolean(PREF_RELATED_TAB_DEFAULT_MIGRATED, true)
+                    .apply();
+        } else {
+            selectedTabTag = prefs.getString(selectedTabPreferenceKey, RELATED_TAB_TAG);
+        }
         prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
         setupBroadcastReceiver();

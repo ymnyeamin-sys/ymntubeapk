@@ -52,6 +52,8 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     private LinearLayout homeChips;
     private boolean homeChromeHidden;
     private RecyclerView.OnScrollListener homeChromeScrollListener;
+    // Keep Home identity outside saved fragment state so Home always uses Card mode.
+    private boolean isHomeFeed;
 
     public static KioskFragment getInstance(final int serviceId) throws ExtractionException {
         return getInstance(serviceId, NewPipe.getService(serviceId)
@@ -75,9 +77,15 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     }
 
     @Override
+    public void useAsFrontPage(final boolean value) {
+        super.useAsFrontPage(value);
+        isHomeFeed = value;
+    }
+
+    @Override
     protected ItemViewMode getItemViewMode() {
         // Use YouTube-style full-width video cards on the Home feed only.
-        return useAsFrontPage ? ItemViewMode.CARD : super.getItemViewMode();
+        return isHomeFeed ? ItemViewMode.CARD : super.getItemViewMode();
     }
 
     @Override
@@ -92,7 +100,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     @Override
     public void onViewCreated(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (useAsFrontPage) {
+        if (isHomeFeed) {
             homeChipsScroll = view.findViewById(R.id.home_chips_scroll);
             homeChips = view.findViewById(R.id.home_chips);
             setupHomeChips();
@@ -102,13 +110,13 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     @Override
     public void onResume() {
         super.onResume();
-        if (useAsFrontPage) {
+        if (isHomeFeed) {
             setHomeChromeHidden(false);
         }
         if (!Localization.getPreferredContentCountry(requireContext()).equals(contentCountry)) {
             reloadContent();
         }
-        if (useAsFrontPage && activity != null) {
+        if (isHomeFeed && activity != null) {
             try {
                 setTitle(kioskTranslatedName);
             } catch (final Exception e) {
@@ -121,7 +129,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     public View onCreateView(@NonNull final LayoutInflater inflater,
                              @Nullable final ViewGroup container,
                              @Nullable final Bundle savedInstanceState) {
-        return inflater.inflate(useAsFrontPage ? R.layout.fragment_home
+        return inflater.inflate(isHomeFeed ? R.layout.fragment_home
                 : R.layout.fragment_kiosk, container, false);
     }
 
@@ -130,7 +138,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
                                     @NonNull final MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         final ActionBar supportActionBar = activity.getSupportActionBar();
-        if (supportActionBar != null && useAsFrontPage) {
+        if (supportActionBar != null && isHomeFeed) {
             supportActionBar.setDisplayHomeAsUpEnabled(false);
         }
     }
@@ -148,7 +156,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     }
 
     private void attachHomeChromeScrollListener() {
-        if (!useAsFrontPage || itemsList == null) {
+        if (!isHomeFeed || itemsList == null) {
             return;
         }
         if (homeChromeScrollListener != null) {
@@ -169,7 +177,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     }
 
     private void setupHomeChips() {
-        if (homeChips == null || !useAsFrontPage) {
+        if (homeChips == null || !isHomeFeed) {
             return;
         }
         homeChips.removeAllViews();
@@ -218,7 +226,7 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     }
 
     private void setHomeChromeHidden(final boolean hidden) {
-        if (!useAsFrontPage) {
+        if (!isHomeFeed) {
             return;
         }
         if (homeChromeHidden == hidden) {

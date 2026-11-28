@@ -25,6 +25,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -147,6 +150,11 @@ public class MainActivity extends AppCompatActivity {
                     && getIntent().hasExtra(EXTRA_MAIN_NAVIGATION_DESTINATION)) {
                 navigateToMainDestination(getIntent().getIntExtra(
                         EXTRA_MAIN_NAVIGATION_DESTINATION, R.id.main_navigation_home));
+            } else if (isLauncherStartWithoutInternet()) {
+                // When the app is launched offline, open the user's downloaded videos directly.
+                if (!NavigationHelper.openDownloads(this)) {
+                    initFragments();
+                }
             } else {
                 initFragments();
             }
@@ -182,6 +190,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         MigrationManager.showUserInfoIfPresent(this);
+    }
+
+    private boolean isLauncherStartWithoutInternet() {
+        final Intent launchIntent = getIntent();
+        if (launchIntent != null && Intent.ACTION_VIEW.equals(launchIntent.getAction())) {
+            return false;
+        }
+
+        final ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager == null) {
+            return true;
+        }
+
+        final Network activeNetwork = connectivityManager.getActiveNetwork();
+        if (activeNetwork == null) {
+            return true;
+        }
+
+        final NetworkCapabilities capabilities =
+                connectivityManager.getNetworkCapabilities(activeNetwork);
+        return capabilities == null
+                || !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                || !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
 
     private void initializeWebViewAfterFirstDraw() {
